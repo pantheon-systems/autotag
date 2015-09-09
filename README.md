@@ -1,10 +1,39 @@
-# building
+# AutoTag
 
-on OSX brew will install libgit 0.23.0, git2go currently wants 0.22.X you can downgrade and pin with:
+Automatically add version tags to a git repo based on commit messages.
+
+Installing
+------
+Make sure you install 0.23.X of libgit on your box before trying to build this. The go2git lib is a wrapper around libgit.
+
+Using the go tool you can get the cli with
+```
+  go get github.com/pantheon-systems/autotag/autotag
 
 ```
-brew unlink libgit2
-brew install https://raw.githubusercontent.com/Homebrew/homebrew/d6a9bb6adeb2043c5c5e9ba3a878decdefc1d240/Library/Formula/libgit2.rb
-brew switch libgit2 0.22.3
-brew pin libgit2
+
+If you have `$GOPATH/bin` in your `$PATH` variable then you can run `autotag`  from the root of a git repo.
+
+
+Usage
+------
+The default behavior with no arguments will tag a new version on current repo and emit the version tagged
+```
+$ autotag
+v3.2.1
+```
+
+you can get more help using -h flag
+```
+$ autotag -h
+Usage:
+  autotag [OPTIONS]
+
+Application Options:
+  -n          Just output the next version, don't autotag
+  -v          Enable verbose logging
+  -r, --repo= Path to the repo (./)
+
+Help Options:
+  -h, --help  Show this help message
 ```
