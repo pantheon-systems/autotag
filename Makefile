@@ -1,6 +1,7 @@
 all: test build cover
 godir="${HOME}/go1.5/src/github.com/pantheon-systems"
 appname=autotag
+ARCH=$(shell uname -m)
 
 # check for circle, and our repo in the gopath on circle. make a link if it's not there
 deps:
@@ -31,5 +32,11 @@ cover:
 cov:
 	gocov test ./... | gocov-html > /tmp/coverage.html
 	open /tmp/coverage.html
+
+release:
+	./autotag/autotag > VERSION
+	mkdir release
+	tar -zcf release/autotag-linux.$(ARCH).tgz autotag/autotag
+	gh-release create pantheon-systems/autotag $(shell cat VERSION)  $(shell git rev-parse --abbrev-ref HEAD)
 
 .PHONY: all cov test

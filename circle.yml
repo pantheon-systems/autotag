@@ -1,15 +1,17 @@
 machine:
   environment:
     GO15VENDOREXPERIMENT: 1
-    PATH: /home/ubuntu/go1.5/bin:$PATH
+    PATH: /home/ubuntu/go1.5/bin:~/bin:$PATH
     GOROOT: /home/ubuntu/go1.5
 
 dependencies:
   cache_directories:
     - ~/go1.5
+    - ~/bin
 
   pre:
     - bash scripts/install-go.sh
+    - bash scripts/mkbins.sh
   override:
     - make deps
 
@@ -26,5 +28,4 @@ deployment:
     branch:
       - master
     commands:
-      - autotag/autotag
-      - git push --tags
+      - make release

@@ -129,7 +129,7 @@ func parseVersion(v string) (*version.Version, error) {
 // Report the Lattest version
 // TODO:(jnelson) this could be more intelligent, looking for a nil new and reporitng the latest version found if we refactor autobump at some point Mon Sep 14 13:05:49 2015
 func (r *GitRepo) LatestVersion() string {
-	return fmt.Sprintf("v%s", r.newVersion)
+	return fmt.Sprintf("%s", r.newVersion)
 }
 
 // calcVersion looks over commits since the last tag, and will apply the version bump needed. It will patch if no other instruction is found

@@ -1,2 +1,4 @@
 autotag/autotag
 cmd/bin
+release
+vendor
