@@ -4,21 +4,12 @@
 
 Automatically add version tags to a git repo based on commit messages.
 
-Installing
-------
-Make sure you install 0.23.X of libgit on your box before trying to build this. The go2git lib is a wrapper around libgit.
+## Installing
+On Linux the easy way to get going is to use the prebuilt binary relese from github releases. This binary has a static version of libgit2 embedded in it, and should be fairly portable to most linux distros.
 
-Using the go tool you can get the cli with
-```
-  go get github.com/pantheon-systems/autotag/autotag
+If you are not on linux/x86_64 you will have to build it from source via the instructions below.
 
-```
-
-If you have `$GOPATH/bin` in your `$PATH` variable then you can run `autotag`  from the root of a git repo.
-
-
-Usage
-------
+## Usage
 The default behavior with no arguments will tag a new version on current repo and emit the version tagged
 ```
 $ autotag
@@ -39,3 +30,15 @@ Application Options:
 Help Options:
   -h, --help  Show this help message
 ```
+
+## Build from Source
+If you want to build from source you will need to have a version of libgit2  >= 0.23.0 installed on your system before hand. The go2git lib is a wrapper around libgit.
+
+After having installed libgit2 you can install the cli using the go tool:
+```
+  go get github.com/pantheon-systems/autotag/autotag
+
+```
+
+If you have `$GOPATH/bin` in your `$PATH` variable then you can run `autotag`  from the root of a git repo.
+
