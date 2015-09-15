@@ -1,0 +1,30 @@
+machine:
+  environment:
+    GO15VENDOREXPERIMENT: 1
+    PATH: /home/ubuntu/go1.5/bin:$PATH
+    GOROOT: /home/ubuntu/go1.5
+
+dependencies:
+  cache_directories:
+    - ~/go1.5
+
+  pre:
+    - bash scripts/install-go.sh
+  override:
+    - make deps
+
+test:
+  override:
+    - make all
+
+general:
+  artifacts:
+    - autotag/autotag
+
+deployment:
+  prod:
+    branch:
+      - master
+    commands:
+      - autotag/autotag
+      - git push --tags
