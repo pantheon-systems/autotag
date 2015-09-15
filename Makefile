@@ -36,7 +36,7 @@ cov:
 release:
 	./autotag/autotag -n > VERSION
 	mkdir release
-	tar -zcf release/autotag-linux.$(ARCH).tgz autotag/autotag
+	cp autotag/autotag release/autotag.linux.$(ARCH)
 	gh-release create pantheon-systems/autotag $(shell ./autotag/autotag -n) $(shell git rev-parse --abbrev-ref HEAD)
 
 .PHONY: all cov test
