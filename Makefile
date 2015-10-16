@@ -18,7 +18,7 @@ ifdef CIRCLECI
 endif
 
 build: deps
-	go build -o autotag/autotag  autotag/*.go
+	go build -ldflags "-linkmode external -extldflags -static" -o autotag/autotag  autotag/*.go
 
 test: deps
 	test -z "$(gofmt -s -l . | tee /dev/stderr)"
