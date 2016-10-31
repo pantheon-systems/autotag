@@ -50,6 +50,8 @@ func TestMajor(t *testing.T) {
 	if v.String() != "2.0.1" {
 		fmt.Printf("MajorBump failed expected '2.0.1' got '%s' ", v)
 	}
+
+	fmt.Printf("Major is now %s", v)
 }
 
 func TestMinor(t *testing.T) {

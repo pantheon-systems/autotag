@@ -120,13 +120,13 @@ func parseVersion(v string) (*version.Version, error) {
 	}
 
 	nVersion, err := version.NewVersion(v)
-	if err != nil && len(nVersion.Segments()) >= 1 {
+	if err != nil && nVersion != nil && len(nVersion.Segments()) >= 1 {
 		return nVersion, err
 	}
 	return nVersion, nil
 }
 
-// Report the Lattest version
+// LatestVersion Reports the Lattest version of the given repo
 // TODO:(jnelson) this could be more intelligent, looking for a nil new and reporitng the latest version found if we refactor autobump at some point Mon Sep 14 13:05:49 2015
 func (r *GitRepo) LatestVersion() string {
 	return fmt.Sprintf("%s", r.newVersion)

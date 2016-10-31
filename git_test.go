@@ -64,24 +64,24 @@ func seedTestRepo(t *testing.T, repo *git.Repository) (*git.Oid, *git.Oid) {
 	checkFatal(t, err)
 	err = idx.AddByPath("README")
 	checkFatal(t, err)
-	treeId, err := idx.WriteTree()
+	treeID, err := idx.WriteTree()
 	checkFatal(t, err)
 
 	message := "This is a commit \n"
-	tree, err := repo.LookupTree(treeId)
+	tree, err := repo.LookupTree(treeID)
 	checkFatal(t, err)
-	commitId, err := repo.CreateCommit("HEAD", sig, sig, message, tree)
+	commitID, err := repo.CreateCommit("HEAD", sig, sig, message, tree)
 	checkFatal(t, err)
 
-	commit, err := repo.LookupCommit(commitId)
+	commit, err := repo.LookupCommit(commitID)
 	checkFatal(t, err)
 
 	createTag(t, repo, commit, "v1.0.1", "Release v1.0.1")
 
 	// move head beyond tag
-	commitId, err = repo.CreateCommit("HEAD", sig, sig, message, tree)
+	commitID, err = repo.CreateCommit("HEAD", sig, sig, message, tree)
 
-	return commitId, treeId
+	return commitID, treeID
 }
 
 func majorTag(t *testing.T, repo *git.Repository) {
@@ -102,9 +102,9 @@ func createTag(t *testing.T, repo *git.Repository, commit *git.Commit, name, mes
 		When:  time.Date(2013, 03, 06, 14, 30, 0, 0, loc),
 	}
 
-	tagId, err := repo.Tags.Create(name, commit, sig, message)
+	tagID, err := repo.Tags.Create(name, commit, sig, message)
 	checkFatal(t, err)
-	return tagId
+	return tagID
 }
 
 func updateReadme(t *testing.T, repo *git.Repository, content string) (*git.Oid, *git.Oid) {
@@ -124,7 +124,7 @@ func updateReadme(t *testing.T, repo *git.Repository, content string) (*git.Oid,
 	checkFatal(t, err)
 	err = idx.AddByPath("README")
 	checkFatal(t, err)
-	treeId, err := idx.WriteTree()
+	treeID, err := idx.WriteTree()
 	checkFatal(t, err)
 
 	currentBranch, err := repo.Head()
@@ -133,12 +133,12 @@ func updateReadme(t *testing.T, repo *git.Repository, content string) (*git.Oid,
 	checkFatal(t, err)
 
 	message := content
-	tree, err := repo.LookupTree(treeId)
+	tree, err := repo.LookupTree(treeID)
 	checkFatal(t, err)
-	commitId, err := repo.CreateCommit("HEAD", sig, sig, message, tree, currentTip)
+	commitID, err := repo.CreateCommit("HEAD", sig, sig, message, tree, currentTip)
 	checkFatal(t, err)
 
-	return commitId, treeId
+	return commitID, treeID
 }
 
 func pathInRepo(repo *git.Repository, name string) string {
