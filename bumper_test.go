@@ -67,9 +67,12 @@ func TestMajorBumper(t *testing.T) {
 	for k, v := range map[string]string{
 		"1":              "2.0.0",
 		"1.0":            "2.0.0",
+		"1.1":            "2.0.0",
 		"1.0.0":          "2.0.0",
+		"1.1.0":          "2.0.0",
 		"1.0.0-patch":    "2.0.0",
 		"1.0.0+build123": "2.0.0",
+		"1.0.12":         "2.0.0",
 	} {
 		tv, err := version.NewVersion(k)
 		checkFatal(t, err)

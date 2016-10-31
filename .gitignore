@@ -1,4 +1,9 @@
 autotag/autotag
 cmd/bin
 release
-vendor
+
+
+coverage*
+
+vendor/**
+!vendor/manifest

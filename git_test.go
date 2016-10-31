@@ -1,14 +1,17 @@
 package autotag_test
 
 import (
+	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
-	"path"
+	"os/exec"
+	"path/filepath"
 	"runtime"
 	"testing"
-	"time"
 
-	"github.com/libgit2/git2go"
+	"github.com/gogits/git"
+	"github.com/pantheon-systems/autotag"
 )
 
 func checkFatal(t *testing.T, err error) {
@@ -24,123 +27,116 @@ func checkFatal(t *testing.T, err error) {
 	t.Fatalf("Fail at %v:%v; %v", file, line, err)
 }
 
-func createTestRepo(t *testing.T) *git.Repository {
+func createTestRepo(t *testing.T) string {
 	// figure out where we can create the test repo
-	path, err := ioutil.TempDir("", "git2go")
+	path, err := ioutil.TempDir("", "autoTagTest")
 	checkFatal(t, err)
-	repo, err := git.InitRepository(path, false)
+
+	err = os.MkdirAll(path, 0777)
 	checkFatal(t, err)
+
+	err = exec.Command("git", "init", path).Run()
+	if err != nil {
+		checkFatal(t, err)
+	}
 
 	tmpfile := "README"
 	err = ioutil.WriteFile(path+"/"+tmpfile, []byte("foo\n"), 0644)
-
 	checkFatal(t, err)
 
-	return repo
+	return path
 }
 
 func cleanupTestRepo(t *testing.T, r *git.Repository) {
 	var err error
-	if r.IsBare() {
-		err = os.RemoveAll(r.Path())
-	} else {
-		err = os.RemoveAll(r.Workdir())
-	}
+	root := repoRoot(r)
+	fmt.Println("Cleaning up test repo:", root)
+	err = os.RemoveAll(root)
 	checkFatal(t, err)
-
-	r.Free()
 }
 
-func seedTestRepo(t *testing.T, repo *git.Repository) (*git.Oid, *git.Oid) {
-	loc, err := time.LoadLocation("Europe/Berlin")
-	checkFatal(t, err)
-	sig := &git.Signature{
-		Name:  "Rand Om Hacker",
-		Email: "random@hacker.com",
-		When:  time.Date(2013, 03, 06, 14, 30, 0, 0, loc),
+func makeCommit(r *git.Repository, msg string) {
+	p := repoRoot(r)
+	cmd := exec.Command("git", "add", "-A")
+	cmd.Dir = p
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println("make commit failed: ", string(out))
+		fmt.Println(err)
 	}
 
-	idx, err := repo.Index()
-	checkFatal(t, err)
-	err = idx.AddByPath("README")
-	checkFatal(t, err)
-	treeID, err := idx.WriteTree()
-	checkFatal(t, err)
+	cmd = exec.Command("git", "commit", "-m", msg)
+	cmd.Dir = p
+	out, err = cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println("make commit failed: ", string(out))
+		fmt.Println(err)
+	}
+}
 
-	message := "This is a commit \n"
-	tree, err := repo.LookupTree(treeID)
+func makeTag(r *git.Repository, tag string) {
+	p := repoRoot(r)
+	cmd := exec.Command("git", "tag", tag)
+	cmd.Dir = p
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println("tag creation failed: ", string(out))
+		fmt.Println(err)
+	}
+}
+
+// adds a #major comit to the repo
+func newRepoMajor(t *testing.T) autotag.GitRepo {
+	tr := createTestRepo(t)
+
+	repo, err := git.OpenRepository(tr)
 	checkFatal(t, err)
-	commitID, err := repo.CreateCommit("HEAD", sig, sig, message, tree)
-	checkFatal(t, err)
+	seedTestRepo(t, repo)
+	updateReadme(t, repo, "#major change")
 
-	commit, err := repo.LookupCommit(commitID)
-	checkFatal(t, err)
+	r, err := autotag.NewRepo(repo.Path, "master")
+	if err != nil {
+		t.Fatal("Error creating repo", err)
+	}
 
-	createTag(t, repo, commit, "v1.0.1", "Release v1.0.1")
+	return *r
+}
 
-	// move head beyond tag
-	commitID, err = repo.CreateCommit("HEAD", sig, sig, message, tree)
+func seedTestRepo(t *testing.T, repo *git.Repository) {
+	f := repoRoot(repo) + "/README"
+	err := exec.Command("touch", f).Run()
+	if err != nil {
+		fmt.Println("FAILED to touch the file ", f, err)
+		checkFatal(t, err)
+	}
 
-	return commitID, treeID
+	makeCommit(repo, "this is a commit")
+	makeTag(repo, "v1.0.1")
 }
 
 func majorTag(t *testing.T, repo *git.Repository) {
-	commitID, _ := updateReadme(t, repo, "Release version 2 #major")
-
-	commit, err := repo.LookupCommit(commitID)
-	checkFatal(t, err)
-
-	createTag(t, repo, commit, "v2.0.0", "Release v2.0.0")
+	updateReadme(t, repo, "Release version 2 #major")
+	makeTag(repo, "v2.0.0")
 }
 
-func createTag(t *testing.T, repo *git.Repository, commit *git.Commit, name, message string) *git.Oid {
-	loc, err := time.LoadLocation("Europe/Bucharest")
+func updateReadme(t *testing.T, repo *git.Repository, content string) {
+	tmpfile := repoRoot(repo) + "/README"
+	err := ioutil.WriteFile(tmpfile, []byte(content), 0644)
 	checkFatal(t, err)
-	sig := &git.Signature{
-		Name:  "Rand Om Hacker",
-		Email: "random@hacker.com",
-		When:  time.Date(2013, 03, 06, 14, 30, 0, 0, loc),
+
+	makeCommit(repo, content)
+}
+
+func repoRoot(r *git.Repository) string {
+
+	checkPath := r.Path
+	if filepath.Base(r.Path) == ".git" {
+		checkPath = r.Path + "/../"
 	}
 
-	tagID, err := repo.Tags.Create(name, commit, sig, message)
-	checkFatal(t, err)
-	return tagID
-}
-
-func updateReadme(t *testing.T, repo *git.Repository, content string) (*git.Oid, *git.Oid) {
-	loc, err := time.LoadLocation("Europe/Berlin")
-	checkFatal(t, err)
-	sig := &git.Signature{
-		Name:  "Rand Om Hacker",
-		Email: "random@hacker.com",
-		When:  time.Date(2013, 03, 06, 14, 30, 0, 0, loc),
+	p, err := filepath.Abs(checkPath)
+	if err != nil {
+		log.Fatal("Failed to get absolute path to repo: ", err)
 	}
-
-	tmpfile := "README"
-	err = ioutil.WriteFile(pathInRepo(repo, tmpfile), []byte(content), 0644)
-	checkFatal(t, err)
-
-	idx, err := repo.Index()
-	checkFatal(t, err)
-	err = idx.AddByPath("README")
-	checkFatal(t, err)
-	treeID, err := idx.WriteTree()
-	checkFatal(t, err)
-
-	currentBranch, err := repo.Head()
-	checkFatal(t, err)
-	currentTip, err := repo.LookupCommit(currentBranch.Target())
-	checkFatal(t, err)
-
-	message := content
-	tree, err := repo.LookupTree(treeID)
-	checkFatal(t, err)
-	commitID, err := repo.CreateCommit("HEAD", sig, sig, message, tree, currentTip)
-	checkFatal(t, err)
-
-	return commitID, treeID
-}
-
-func pathInRepo(repo *git.Repository, name string) string {
-	return path.Join(path.Dir(path.Dir(repo.Path())), name)
+	return p
 }

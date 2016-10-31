@@ -1,0 +1,46 @@
+{
+	"version": 0,
+	"dependencies": [
+		{
+			"importpath": "github.com/Unknwon/cae",
+			"repository": "https://github.com/Unknwon/cae",
+			"vcs": "git",
+			"revision": "c6aac99ea2cae2ebaf23f26f76b04fe3fcfc9f8c",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/davecgh/go-spew/spew",
+			"repository": "https://github.com/davecgh/go-spew",
+			"vcs": "git",
+			"revision": "346938d642f2ec3594ed81d874461961cd0faa76",
+			"branch": "master",
+			"path": "/spew",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/gogits/git",
+			"repository": "https://github.com/gogits/git",
+			"vcs": "git",
+			"revision": "c62c1045b62b6d77d208e6e495890a3c2b805f1b",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/hashicorp/go-version",
+			"repository": "https://github.com/hashicorp/go-version",
+			"vcs": "git",
+			"revision": "e96d3840402619007766590ecea8dd7af1292276",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/jessevdk/go-flags",
+			"repository": "https://github.com/jessevdk/go-flags",
+			"vcs": "git",
+			"revision": "0648c820cd4e564706597268ae2d2c7d9e6900c6",
+			"branch": "master",
+			"notests": true
+		}
+	]
+}
