@@ -1,4 +1,4 @@
-package autotag_test
+package autotag
 
 import (
 	"fmt"
@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/gogits/git"
-	"github.com/pantheon-systems/autotag"
 )
 
 func checkFatal(t *testing.T, err error) {
@@ -86,7 +85,7 @@ func makeTag(r *git.Repository, tag string) {
 }
 
 // adds a #major comit to the repo
-func newRepoMajor(t *testing.T) autotag.GitRepo {
+func newRepoMajor(t *testing.T) GitRepo {
 	tr := createTestRepo(t)
 
 	repo, err := git.OpenRepository(tr)
@@ -94,7 +93,7 @@ func newRepoMajor(t *testing.T) autotag.GitRepo {
 	seedTestRepo(t, repo)
 	updateReadme(t, repo, "#major change")
 
-	r, err := autotag.NewRepo(repo.Path, "master")
+	r, err := NewRepo(repo.Path, "master")
 	if err != nil {
 		t.Fatal("Error creating repo", err)
 	}

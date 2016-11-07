@@ -20,7 +20,7 @@ var (
 
 // GitRepo represents a repository we want to run actions against
 type GitRepo struct {
-	Repo *git.Repository
+	repo *git.Repository
 
 	currentVersion *version.Version
 	currentTag     *git.Tag
@@ -39,7 +39,7 @@ func NewRepo(repoPath, branch string) (*GitRepo, error) {
 	}
 
 	r := &GitRepo{
-		Repo:   repo,
+		repo:   repo,
 		branch: branch,
 	}
 
@@ -61,7 +61,7 @@ func (r *GitRepo) parseTags() error {
 
 	versions := make(map[*version.Version]*git.Tag)
 
-	tags, err := r.Repo.GetTags()
+	tags, err := r.repo.GetTags()
 	if err != nil {
 		return fmt.Errorf("failed to fetch tags: %s", err.Error())
 	}
@@ -69,7 +69,7 @@ func (r *GitRepo) parseTags() error {
 	for _, tag := range tags {
 		if v, err := maybeVersionFromTag(tag); err == nil {
 
-			t, err := r.Repo.GetTag(tag)
+			t, err := r.repo.GetTag(tag)
 			if err != nil {
 				log.Printf("Error fetching commit for tag '%s' %s", tag, err)
 				continue
@@ -138,7 +138,7 @@ func (r *GitRepo) LatestVersion() string {
 }
 
 func (r *GitRepo) retrieveBranchInfo() error {
-	id, err := r.Repo.GetCommitIdOfBranch(r.branch)
+	id, err := r.repo.GetCommitIdOfBranch(r.branch)
 	if err != nil {
 		return fmt.Errorf("error getting head commit: %s ", err.Error())
 	}
@@ -160,7 +160,7 @@ func (r *GitRepo) calcVersion() error {
 		return fmt.Errorf("failed to get current tag's commit %+v", r.currentTag)
 	}
 
-	l, err := r.Repo.CommitsBefore(r.branchID)
+	l, err := r.repo.CommitsBefore(r.branchID)
 	if err != nil {
 		log.Printf("Error loading history for tag '%s': %s ", r.currentVersion, err.Error())
 	}
@@ -210,7 +210,7 @@ func (r *GitRepo) tagNewVersion() error {
 	tagName := fmt.Sprintf("v%s", r.newVersion.String())
 
 	log.Println("Writing Tag", tagName)
-	err := r.Repo.CreateTag(tagName, r.branchID)
+	err := r.repo.CreateTag(tagName, r.branchID)
 	if err != nil {
 		return fmt.Errorf("error creating tag: %s", err.Error())
 	}

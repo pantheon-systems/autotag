@@ -1,4 +1,4 @@
-package autotag_test
+package autotag
 
 import (
 	"fmt"
@@ -6,17 +6,16 @@ import (
 	"testing"
 
 	"github.com/gogits/git"
-	"github.com/pantheon-systems/autotag"
 )
 
-func newRepo(t *testing.T) autotag.GitRepo {
+func newRepo(t *testing.T) GitRepo {
 	path := createTestRepo(t)
 
 	repo, err := git.OpenRepository(path)
 	checkFatal(t, err)
 
 	seedTestRepo(t, repo)
-	r, err := autotag.NewRepo(repo.Path, "master")
+	r, err := NewRepo(repo.Path, "master")
 	if err != nil {
 		t.Fatal("Error creating repo", err)
 	}
@@ -26,9 +25,9 @@ func newRepo(t *testing.T) autotag.GitRepo {
 
 func TestBumpers(t *testing.T) {
 	r := newRepo(t)
-	defer cleanupTestRepo(t, r.Repo)
+	defer cleanupTestRepo(t, r.repo)
 
-	majorTag(t, r.Repo)
+	majorTag(t, r.repo)
 	v, err := r.MajorBump()
 	if err != nil {
 		t.Fatal("MajorBump failed: ", err)
@@ -42,9 +41,9 @@ func TestBumpers(t *testing.T) {
 }
 func TestMinor(t *testing.T) {
 	r := newRepo(t)
-	defer cleanupTestRepo(t, r.Repo)
+	defer cleanupTestRepo(t, r.repo)
 
-	majorTag(t, r.Repo)
+	majorTag(t, r.repo)
 	v, err := r.MinorBump()
 	if err != nil {
 		t.Fatal("MinorBump failed: ", err)
@@ -56,9 +55,9 @@ func TestMinor(t *testing.T) {
 }
 func TestPatch(t *testing.T) {
 	r := newRepo(t)
-	defer cleanupTestRepo(t, r.Repo)
+	defer cleanupTestRepo(t, r.repo)
 
-	majorTag(t, r.Repo)
+	majorTag(t, r.repo)
 	v, err := r.PatchBump()
 	if err != nil {
 		t.Fatal("PatchBump failed: ", err)
@@ -71,14 +70,14 @@ func TestPatch(t *testing.T) {
 
 func TestAutoTag(t *testing.T) {
 	r := newRepo(t)
-	defer cleanupTestRepo(t, r.Repo)
+	defer cleanupTestRepo(t, r.repo)
 
 	err := r.AutoTag()
 	if err != nil {
 		t.Fatal("AutoTag failed ", err)
 	}
 
-	tags, err := r.Repo.GetTags()
+	tags, err := r.repo.GetTags()
 	checkFatal(t, err)
 	expect := []string{"v1.0.1", "v1.0.2"}
 
@@ -88,14 +87,14 @@ func TestAutoTag(t *testing.T) {
 }
 func TestAutoTagCommits(t *testing.T) {
 	r := newRepoMajor(t)
-	defer cleanupTestRepo(t, r.Repo)
+	defer cleanupTestRepo(t, r.repo)
 
 	err := r.AutoTag()
 	if err != nil {
 		t.Fatal("AutoTag failed ", err)
 	}
 
-	tags, err := r.Repo.GetTags()
+	tags, err := r.repo.GetTags()
 	checkFatal(t, err)
 	expect := []string{"v1.0.1", "v2.0.0"}
 
