@@ -21,8 +21,9 @@ deps:: _gvt-install deps-lint ## install dependencies for project assumes you ha
 
 # for now we disable gotype because its vendor suport is mostly broken
 #  https://github.com/alecthomas/gometalinter/issues/91
+#  TODO: re-enable gas when no longer executing git directly
 lint::
-	gometalinter.v1 --vendor -D gotype -D dupl -D gocyclo -E vet -E golint -E gofmt -E unused --deadline=10s
+	gometalinter.v1 --vendor -D gas -D gotype -D dupl -D gocyclo -E vet -E golint -E gofmt -E unused --deadline=10s
 
 test:: lint  ## run go tests (fmt vet)
 	go test -race -v $$(go list ./... | grep -v /vendor/)
