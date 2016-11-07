@@ -18,6 +18,7 @@ dependencies:
 test:
   override:
     - make test-circle
+    - make build
 
 general:
   artifacts:
