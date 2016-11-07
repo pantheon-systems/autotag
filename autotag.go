@@ -30,8 +30,11 @@ type GitRepo struct {
 }
 
 // NewRepo is a constructor for a repo object, parsing the tags that exist
-// The caller is responsible for calling Free() on the embedded Repo when they are done with it
 func NewRepo(repoPath, branch string) (*GitRepo, error) {
+	if branch == "" {
+		return nil, fmt.Errorf("must specify a branch")
+	}
+
 	log.Println("Opening repo at ", repoPath+"/.git")
 	repo, err := git.OpenRepository(repoPath + "/.git")
 	if err != nil {
@@ -55,7 +58,7 @@ func NewRepo(repoPath, branch string) (*GitRepo, error) {
 	return r, nil
 }
 
-// Parse tags on repo and
+// Parse tags on repo, sort them, and store the most recent revision in the repo object
 func (r *GitRepo) parseTags() error {
 	log.Println("Parsing repository tags")
 
@@ -67,31 +70,29 @@ func (r *GitRepo) parseTags() error {
 	}
 
 	for _, tag := range tags {
-		if v, err := maybeVersionFromTag(tag); err == nil {
-
-			t, err := r.repo.GetTag(tag)
-			if err != nil {
-				log.Printf("Error fetching commit for tag '%s' %s", tag, err)
-				continue
-			}
-
-			//			t := r.Repo.GetTag(tag)
-			//			t.Commit().
-
-			//	log.Printf("Found tag %s ref: %s", v.String(), commit.Id)
-			versions[v] = t
+		v, err := maybeVersionFromTag(tag)
+		if err != nil {
+			continue
 		}
+
+		t, err := r.repo.GetTag(tag)
+		if err != nil {
+			log.Printf("Error fetching commit for tag '%s' %s", tag, err)
+			continue
+		}
+
+		versions[v] = t
 	}
 
 	keys := make([]*version.Version, 0, len(versions))
 	for key := range versions {
 		keys = append(keys, key)
 	}
-	sort.Sort(version.Collection(keys))
+	sort.Sort(sort.Reverse(version.Collection(keys)))
 
 	// set the current versions
-	if itemLen := len(keys); itemLen >= 1 {
-		v := keys[itemLen-1]
+	if len(keys) >= 1 {
+		v := keys[0]
 		r.currentVersion = v
 		r.currentTag = versions[v]
 
@@ -166,9 +167,14 @@ func (r *GitRepo) calcVersion() error {
 	}
 	log.Printf("Checking commits from %s to %s ", r.branchID, tagCommit.Id)
 
+	// Sort the commits oldest to newest. Then process each commit for bumper commands.
 	start := false
 	for e := l.Back(); e != nil; e = e.Prev() {
 		commit := e.Value.(*git.Commit)
+		if commit == nil {
+			return fmt.Errorf("commit pointed to nil object. This should not happen.\n")
+		}
+
 		// we scan from the first commit till the tagCommit.
 		if commit.Id == tagCommit.Id {
 			start = true
@@ -221,7 +227,7 @@ func (r *GitRepo) tagNewVersion() error {
 func (r *GitRepo) parseCommit(commit *git.Commit) (*version.Version, error) {
 	var b bumper
 	msg := commit.Message()
-	log.Printf("Parsing %s: %s", commit.Id, msg)
+	log.Printf("Parsing %s: %s\n", commit.Id, msg)
 
 	if majorRex.MatchString(msg) {
 		log.Println("major bump")
