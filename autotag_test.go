@@ -33,11 +33,11 @@ func TestBumpers(t *testing.T) {
 		t.Fatal("MajorBump failed: ", err)
 	}
 
-	if v.String() != "2.0.1" {
-		fmt.Printf("MajorBump failed expected '2.0.1' got '%s' ", v)
+	if v.String() != "2.0.0" {
+		t.Fatalf("MajorBump failed expected '2.0.1' got '%s' ", v)
 	}
 
-	fmt.Printf("Major is now %s", v)
+	fmt.Printf("Major is now %s\n", v)
 }
 func TestMinor(t *testing.T) {
 	r := newRepo(t)
@@ -50,7 +50,7 @@ func TestMinor(t *testing.T) {
 	}
 
 	if v.String() != "1.1.0" {
-		fmt.Printf("MinorBump failed expected '1.1.0' got '%s' ", v)
+		t.Fatalf("MinorBump failed expected '1.1.0' got '%s' \n", v)
 	}
 }
 func TestPatch(t *testing.T) {
@@ -64,7 +64,7 @@ func TestPatch(t *testing.T) {
 	}
 
 	if v.String() != "1.0.2" {
-		t.Fatalf("PatchBump failed expected '1.0.2' got '%s' ", v)
+		t.Fatalf("PatchBump failed expected '1.0.2' got '%s' \n", v)
 	}
 }
 
@@ -82,7 +82,7 @@ func TestAutoTag(t *testing.T) {
 	expect := []string{"v1.0.1", "v1.0.2"}
 
 	if !reflect.DeepEqual(expect, tags) {
-		t.Fatalf("AutoBump expected '%+v' got '%+v'", expect, tags)
+		t.Fatalf("AutoBump expected '%+v' got '%+v'\n", expect, tags)
 	}
 }
 func TestAutoTagCommits(t *testing.T) {
@@ -99,6 +99,6 @@ func TestAutoTagCommits(t *testing.T) {
 	expect := []string{"v1.0.1", "v2.0.0"}
 
 	if !reflect.DeepEqual(expect, tags) {
-		t.Fatalf("AutoBump expected '%+v' got '%+v'", expect, tags)
+		t.Fatalf("AutoBump expected '%+v' got '%+v'\n", expect, tags)
 	}
 }
