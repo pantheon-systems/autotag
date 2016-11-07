@@ -24,11 +24,13 @@ func (m major) bump(cv *version.Version) (*version.Version, error) {
 	segments := cv.Segments()
 
 	vString := fmt.Sprintf("%d", segments[0]+1)
-	for index, value := range segments {
+	for index := range segments {
 		if index == 0 {
 			continue
 		}
-		vString += fmt.Sprintf(".%d", value)
+		if index == 1 || index == 2 {
+			vString += ".0"
+		}
 	}
 	return version.NewVersion(vString)
 }

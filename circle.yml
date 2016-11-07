@@ -1,23 +1,23 @@
 machine:
   environment:
-    GO15VENDOREXPERIMENT: 1
-    PATH: /home/ubuntu/go1.5/bin:~/bin:$PATH
-    GOROOT: /home/ubuntu/go1.5
+    GOVERSION: 1.7.3
+    GOPATH: /home/ubuntu/go_workspace
+    GOROOT: /home/ubuntu/go
+    PATH: /home/ubuntu/go/bin:$GOPATH/bin:$PATH
+
 
 dependencies:
   cache_directories:
-    - ~/go1.5
-    - ~/bin
-
-  pre:
-    - bash scripts/install-go.sh
-    - bash scripts/mkbins.sh
+    - ../go
+    - ../go_workspace
+    - vendor
   override:
-    - make deps
+    - make deps-circle
+    - make deps-coverage
 
 test:
   override:
-    - make all
+    - make test-circle
 
 general:
   artifacts:

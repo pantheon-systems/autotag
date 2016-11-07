@@ -5,15 +5,16 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 
 	"github.com/jessevdk/go-flags"
 	"github.com/pantheon-systems/autotag"
 )
 
+// Options holds the CLI args
 type Options struct {
 	JustVersion bool   `short:"n" description:"Just output the next version, don't autotag"`
 	Verbose     bool   `short:"v" description:"Enable verbose logging"`
+	Branch      string `short:"b" long:"branch" description:"Git branch to scan" default:"master" `
 	RepoPath    string `short:"r" long:"repo" description:"Path to the repo" default:"./" `
 }
 
@@ -32,18 +33,11 @@ func main() {
 		log.SetOutput(os.Stderr)
 	}
 
-	repoPath, err := filepath.Abs(opts.RepoPath)
+	r, err := autotag.NewRepo(opts.RepoPath, opts.Branch)
 	if err != nil {
 		fmt.Println("Error initializing: ", err)
 		os.Exit(1)
 	}
-
-	r, err := autotag.NewRepo(repoPath)
-	if err != nil {
-		fmt.Println("Error initializing: ", err)
-		os.Exit(1)
-	}
-	defer r.Repo.Free()
 
 	// Tag unless asked otherwise
 	if !opts.JustVersion {
