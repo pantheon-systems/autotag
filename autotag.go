@@ -116,8 +116,15 @@ func (r *GitRepo) parseTags() error {
 	for tag, commit := range tags {
 		v, err := maybeVersionFromTag(tag)
 		if err != nil {
+			log.Println("skipping non version tag: ", tag)
 			continue
 		}
+
+		if v == nil {
+			log.Println("skipping non version tag: ", tag)
+			continue
+		}
+
 		c, err := r.repo.GetCommit(commit)
 		if err != nil {
 			return fmt.Errorf("error reading commit '%s':  %s", commit, err)
