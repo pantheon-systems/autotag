@@ -12,14 +12,13 @@ ifeq (, $(shell which gihub-release))
 endif
 
 build::
-	go build -o autotag/autotag  autotag/*.go
+	go build -o $(APP)/$(APP)  $(APP)/*.go
 
 release: VERSION=$(shell $(AUTOTAG) -n)
 release:
 	mkdir release
-	cp autotag/autotag autotag
-	GOOS=darwin go build -o $(APP)-darwin autotag/*.go
+	GOOS=darwin go build -o $(APP)/$(APP)-darwin autotag/*.go
 	github-release create pantheon-systems/autotag $(shell ./autotag/autotag -n) $(shell git rev-parse --abbrev-ref HEAD)
 	github-release release -u pantheon-systems -r $(APP) -t $(VERSION) --draft
-	github-release upload -u pantheon-systems -r $(APP) -n Linux -f $(APP) -t $(VERSION)
-	github-release upload -u pantheon-systems -r $(APP) -n OSX -f $(APP)-darwin -t $(VERSION)
+	github-release upload -u pantheon-systems -r $(APP) -n Linux -f $(APP)/$(APP) -t $(VERSION)
+	github-release upload -u pantheon-systems -r $(APP) -n OSX -f $(APP)/$(APP)-darwin -t $(VERSION)
