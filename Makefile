@@ -9,6 +9,10 @@ include scripts/make/common-go.mk
 deps-circle::
 	git config --global user.email circleci
 	git config --global user.name circleci
+ifeq (, $(shell which gh-release))
+	curl -L https://www.dropbox.com/s/4k3eq7xpehwwqr5/gh-release?dl=0 -o ~/bin/gh-release
+	chmod 755 ~/bin/gh-release
+endif
 
 build::
 	go build -o autotag/autotag  autotag/*.go
