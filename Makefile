@@ -14,7 +14,7 @@ endif
 build::
 	go build -o $(APP)/$(APP)  $(APP)/*.go
 
-release: VERSION=$(shell $(AUTOTAG) -n)
+release: VERSION=$(shell $(APP)/$(APP) -n)
 release:
 	GOOS=darwin go build -o $(APP)/$(APP)-darwin autotag/*.go
 	github-release release -u pantheon-systems -r $(APP) -t $(VERSION) --draft
