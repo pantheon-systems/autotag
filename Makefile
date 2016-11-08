@@ -1,4 +1,4 @@
-appname=autotag
+APP=autotag
 
 include scripts/make/common.mk
 include scripts/make/common-go.mk
