@@ -16,9 +16,7 @@ build::
 
 release: VERSION=$(shell $(AUTOTAG) -n)
 release:
-	mkdir release
 	GOOS=darwin go build -o $(APP)/$(APP)-darwin autotag/*.go
-	github-release create pantheon-systems/autotag $(shell ./autotag/autotag -n) $(shell git rev-parse --abbrev-ref HEAD)
 	github-release release -u pantheon-systems -r $(APP) -t $(VERSION) --draft
 	github-release upload -u pantheon-systems -r $(APP) -n Linux -f $(APP)/$(APP) -t $(VERSION)
 	github-release upload -u pantheon-systems -r $(APP) -n OSX -f $(APP)/$(APP)-darwin -t $(VERSION)
