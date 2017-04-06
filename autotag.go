@@ -58,58 +58,19 @@ func NewRepo(repoPath, branch string) (*GitRepo, error) {
 	return r, nil
 }
 
-// Temp shim that uses git to parse the tags on the repo.
-// this is because the library at the moment does not parse packed refs
-// TODO: move to https://github.com/src-d/go-git as the pure-go library. It supports everything we need
-func (r *GitRepo) getTags() (map[string]string, error) {
-	tags := make(map[string]string)
-	var outb, errb bytes.Buffer
-
-	gitbin, err := exec.LookPath("git")
-	if err != nil {
-		return tags, fmt.Errorf("git executable not found: %s", err)
-	}
-
-	p := r.repo.Path
-	if strings.Contains(p, "/.git") {
-		p, err = filepath.Abs(p + "/../")
-		if err != nil {
-			return tags, err
-		}
-	}
-
-	cmd := exec.Command(gitbin, "show-ref", "--tags")
-	cmd.Dir = p
-
-	cmd.Stderr = &errb
-	cmd.Stdout = &outb
-	err = cmd.Run()
-	if err != nil {
-		return tags, fmt.Errorf("failed listing tags '%s': %s", errb.String(), err)
-	}
-
-	scanner := bufio.NewScanner(&outb)
-	for scanner.Scan() {
-		t := strings.Split(scanner.Text(), " refs/tags/")
-		tags[t[1]] = t[0]
-	}
-
-	return tags, nil
-}
-
 // Parse tags on repo, sort them, and store the most recent revision in the repo object
 func (r *GitRepo) parseTags() error {
 	log.Println("Parsing repository tags")
 
 	versions := make(map[*version.Version]*git.Commit)
 
-	tags, err := r.getTags()
+	tags, err := r.repo.GetTags()
 	if err != nil {
 		return fmt.Errorf("failed to fetch tags: %s", err.Error())
 	}
 
 	for tag, commit := range tags {
-		v, err := maybeVersionFromTag(tag)
+		v, err := maybeVersionFromTag(commit)
 		if err != nil {
 			log.Println("skipping non version tag: ", tag)
 			continue
