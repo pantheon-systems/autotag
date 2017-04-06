@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gogits/git"
+	"github.com/gogits/git-module"
 )
 
 func newRepo(t *testing.T) GitRepo {
@@ -79,7 +79,9 @@ func TestAutoTag(t *testing.T) {
 
 	tags, err := r.repo.GetTags()
 	checkFatal(t, err)
-	expect := []string{"v1.0.1", "v1.0.2"}
+
+	// XXX(fujin): When switching to `git-module`, the sort order reversed. Most recent is first.
+	expect := []string{"v1.0.2", "v1.0.1"}
 
 	if !reflect.DeepEqual(expect, tags) {
 		t.Fatalf("AutoBump expected '%+v' got '%+v'\n", expect, tags)
@@ -96,7 +98,8 @@ func TestAutoTagCommits(t *testing.T) {
 
 	tags, err := r.repo.GetTags()
 	checkFatal(t, err)
-	expect := []string{"v1.0.1", "v2.0.0"}
+	// XXX(fujin): When switching to `git-module`, the sort order reversed. Most recent is first.
+	expect := []string{"v2.0.0", "v1.0.1"}
 
 	if !reflect.DeepEqual(expect, tags) {
 		t.Fatalf("AutoBump expected '%+v' got '%+v'\n", expect, tags)

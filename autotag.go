@@ -1,18 +1,13 @@
 package autotag
 
 import (
-	"bufio"
-	"bytes"
 	"fmt"
 	"log"
-	"os/exec"
-	"path/filepath"
 	"sort"
-	"strings"
 
 	"regexp"
 
-	"github.com/gogits/git"
+	"github.com/gogits/git-module"
 	"github.com/hashicorp/go-version"
 )
 
@@ -187,7 +182,7 @@ func (r *GitRepo) LatestVersion() string {
 }
 
 func (r *GitRepo) retrieveBranchInfo() error {
-	id, err := r.repo.GetCommitIdOfBranch(r.branch)
+	id, err := r.repo.GetBranchCommitID(r.branch)
 	if err != nil {
 		return fmt.Errorf("error getting head commit: %s ", err.Error())
 	}
@@ -204,29 +199,22 @@ func (r *GitRepo) calcVersion() error {
 		return err
 	}
 
-	l, err := r.repo.CommitsBefore(r.branchID)
+	startCommit, err := r.repo.GetBranchCommit(r.branch)
+	if err != nil {
+		return err
+	}
+
+	l, err := r.repo.CommitsBetween(startCommit, r.currentTag)
 	if err != nil {
 		log.Printf("Error loading history for tag '%s': %s ", r.currentVersion, err.Error())
 	}
-	log.Printf("Checking commits from %s to %s ", r.branchID, r.currentTag.Id)
+	log.Printf("Checking commits from %s to %s ", r.branchID, r.currentTag.ID)
 
 	// Sort the commits oldest to newest. Then process each commit for bumper commands.
-	start := false
 	for e := l.Back(); e != nil; e = e.Prev() {
 		commit := e.Value.(*git.Commit)
 		if commit == nil {
-			return fmt.Errorf("commit pointed to nil object. This should not happen.\n")
-		}
-
-		// we scan from the first commit till the tagCommit.
-		if commit.Id == r.currentTag.Id {
-			start = true
-			continue
-		}
-
-		// unless we have found the commit theres no need to process
-		if !start {
-			continue
+			return fmt.Errorf("commit pointed to nil object. This should not happen: %s", e)
 		}
 
 		v, nerr := r.parseCommit(commit)
@@ -270,7 +258,7 @@ func (r *GitRepo) tagNewVersion() error {
 func (r *GitRepo) parseCommit(commit *git.Commit) (*version.Version, error) {
 	var b bumper
 	msg := commit.Message()
-	log.Printf("Parsing %s: %s\n", commit.Id, msg)
+	log.Printf("Parsing %s: %s\n", commit.ID, msg)
 
 	if majorRex.MatchString(msg) {
 		log.Println("major bump")
