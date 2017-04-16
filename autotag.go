@@ -1,18 +1,13 @@
 package autotag
 
 import (
-	"bufio"
-	"bytes"
 	"fmt"
 	"log"
-	"os/exec"
-	"path/filepath"
 	"sort"
-	"strings"
 
 	"regexp"
 
-	"github.com/gogits/git"
+	"github.com/gogits/git-module"
 	"github.com/hashicorp/go-version"
 )
 
@@ -63,58 +58,19 @@ func NewRepo(repoPath, branch string) (*GitRepo, error) {
 	return r, nil
 }
 
-// Temp shim that uses git to parse the tags on the repo.
-// this is because the library at the moment does not parse packed refs
-// TODO: move to https://github.com/src-d/go-git as the pure-go library. It supports everything we need
-func (r *GitRepo) getTags() (map[string]string, error) {
-	tags := make(map[string]string)
-	var outb, errb bytes.Buffer
-
-	gitbin, err := exec.LookPath("git")
-	if err != nil {
-		return tags, fmt.Errorf("git executable not found: %s", err)
-	}
-
-	p := r.repo.Path
-	if strings.Contains(p, "/.git") {
-		p, err = filepath.Abs(p + "/../")
-		if err != nil {
-			return tags, err
-		}
-	}
-
-	cmd := exec.Command(gitbin, "show-ref", "--tags")
-	cmd.Dir = p
-
-	cmd.Stderr = &errb
-	cmd.Stdout = &outb
-	err = cmd.Run()
-	if err != nil {
-		return tags, fmt.Errorf("failed listing tags '%s': %s", errb.String(), err)
-	}
-
-	scanner := bufio.NewScanner(&outb)
-	for scanner.Scan() {
-		t := strings.Split(scanner.Text(), " refs/tags/")
-		tags[t[1]] = t[0]
-	}
-
-	return tags, nil
-}
-
 // Parse tags on repo, sort them, and store the most recent revision in the repo object
 func (r *GitRepo) parseTags() error {
 	log.Println("Parsing repository tags")
 
 	versions := make(map[*version.Version]*git.Commit)
 
-	tags, err := r.getTags()
+	tags, err := r.repo.GetTags()
 	if err != nil {
 		return fmt.Errorf("failed to fetch tags: %s", err.Error())
 	}
 
 	for tag, commit := range tags {
-		v, err := maybeVersionFromTag(tag)
+		v, err := maybeVersionFromTag(commit)
 		if err != nil {
 			log.Println("skipping non version tag: ", tag)
 			continue
@@ -187,7 +143,7 @@ func (r *GitRepo) LatestVersion() string {
 }
 
 func (r *GitRepo) retrieveBranchInfo() error {
-	id, err := r.repo.GetCommitIdOfBranch(r.branch)
+	id, err := r.repo.GetBranchCommitID(r.branch)
 	if err != nil {
 		return fmt.Errorf("error getting head commit: %s ", err.Error())
 	}
@@ -204,29 +160,22 @@ func (r *GitRepo) calcVersion() error {
 		return err
 	}
 
-	l, err := r.repo.CommitsBefore(r.branchID)
+	startCommit, err := r.repo.GetBranchCommit(r.branch)
+	if err != nil {
+		return err
+	}
+
+	l, err := r.repo.CommitsBetween(startCommit, r.currentTag)
 	if err != nil {
 		log.Printf("Error loading history for tag '%s': %s ", r.currentVersion, err.Error())
 	}
-	log.Printf("Checking commits from %s to %s ", r.branchID, r.currentTag.Id)
+	log.Printf("Checking commits from %s to %s ", r.branchID, r.currentTag.ID)
 
 	// Sort the commits oldest to newest. Then process each commit for bumper commands.
-	start := false
 	for e := l.Back(); e != nil; e = e.Prev() {
 		commit := e.Value.(*git.Commit)
 		if commit == nil {
-			return fmt.Errorf("commit pointed to nil object. This should not happen.\n")
-		}
-
-		// we scan from the first commit till the tagCommit.
-		if commit.Id == r.currentTag.Id {
-			start = true
-			continue
-		}
-
-		// unless we have found the commit theres no need to process
-		if !start {
-			continue
+			return fmt.Errorf("commit pointed to nil object. This should not happen: %s", e)
 		}
 
 		v, nerr := r.parseCommit(commit)
@@ -270,7 +219,7 @@ func (r *GitRepo) tagNewVersion() error {
 func (r *GitRepo) parseCommit(commit *git.Commit) (*version.Version, error) {
 	var b bumper
 	msg := commit.Message()
-	log.Printf("Parsing %s: %s\n", commit.Id, msg)
+	log.Printf("Parsing %s: %s\n", commit.ID, msg)
 
 	if majorRex.MatchString(msg) {
 		log.Println("major bump")

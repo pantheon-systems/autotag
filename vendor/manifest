@@ -10,6 +10,14 @@
 			"notests": true
 		},
 		{
+			"importpath": "github.com/Unknwon/com",
+			"repository": "https://github.com/Unknwon/com",
+			"vcs": "git",
+			"revision": "0db4a625e949e956314d7d1adea9bf82384cc10c",
+			"branch": "master",
+			"notests": true
+		},
+		{
 			"importpath": "github.com/davecgh/go-spew/spew",
 			"repository": "https://github.com/davecgh/go-spew",
 			"vcs": "git",
@@ -19,10 +27,10 @@
 			"notests": true
 		},
 		{
-			"importpath": "github.com/gogits/git",
-			"repository": "https://github.com/gogits/git",
+			"importpath": "github.com/gogits/git-module",
+			"repository": "https://github.com/gogits/git-module",
 			"vcs": "git",
-			"revision": "c62c1045b62b6d77d208e6e495890a3c2b805f1b",
+			"revision": "2a496cad1f36aed60b14844b33b68eb3edfc2718",
 			"branch": "master",
 			"notests": true
 		},
@@ -39,6 +47,14 @@
 			"repository": "https://github.com/jessevdk/go-flags",
 			"vcs": "git",
 			"revision": "0648c820cd4e564706597268ae2d2c7d9e6900c6",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/mcuadros/go-version",
+			"repository": "https://github.com/mcuadros/go-version",
+			"vcs": "git",
+			"revision": "257f7b9a7d87427c8d7f89469a5958d57f8abd7c",
 			"branch": "master",
 			"notests": true
 		}
