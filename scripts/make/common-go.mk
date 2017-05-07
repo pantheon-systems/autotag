@@ -23,7 +23,7 @@ deps:: _gvt-install deps-lint ## install dependencies for project assumes you ha
 #  https://github.com/alecthomas/gometalinter/issues/91
 #  TODO: re-enable gas when no longer executing git directly
 lint::
-	gometalinter.v1 --vendor -D gas -D gotype -D dupl -D gocyclo -E vet -E golint -E gofmt -E unused --deadline=10s
+	gometalinter.v1 --vendor -D gas -D gotype -D dupl -D gocyclo -E vet -E golint -E gofmt -E unused --deadline=120s
 
 test:: lint  ## run go tests (fmt vet)
 	go test -race -v $$(go list ./... | grep -v /vendor/)
