@@ -1,6 +1,6 @@
 machine:
   environment:
-    GOVERSION: 1.7.3
+    GOVERSION: 1.8.1
     GOPATH: /home/ubuntu/go_workspace
     GOROOT: /home/ubuntu/go
     PATH: /home/ubuntu/go/bin:$GOPATH/bin:$PATH
