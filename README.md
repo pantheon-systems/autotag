@@ -7,11 +7,18 @@ AutoTag
 
 Automatically add version tags to a git repo based on commit messages.
 
+Dependencies
+==========
+* [Git 2.x](https://git-scm.com/downloads) available in PATH
+
 Installing
 ==========
 
-On Linux the easy way to get going is to use the pre-built binary release from github releases. 
+On Linux the easy way to get going is to use the pre-built binary release from [GitHub Releases](https://github.com/pantheon-systems/autotag/releases). 
 
+If using a recent version that depends on the Git CLI, install Git with your distribution's package management system. 
+
+If using an older release with cgo libgit or native golang Git, the binary will work standalone.
 
 Usage
 =====
