@@ -3,6 +3,7 @@ package autotag
 import (
 	"fmt"
 	"log"
+	"path/filepath"
 	"sort"
 
 	"regexp"
@@ -35,8 +36,14 @@ func NewRepo(repoPath, branch string) (*GitRepo, error) {
 		return nil, fmt.Errorf("must specify a branch")
 	}
 
-	log.Println("Opening repo at ", repoPath+"/.git")
-	repo, err := git.OpenRepository(repoPath + "/.git")
+	gitDirPath, err := generateGitDirPath(repoPath)
+
+	if err != nil {
+		return nil, err
+	}
+
+	log.Println("Opening repo at", gitDirPath)
+	repo, err := git.OpenRepository(gitDirPath)
 	if err != nil {
 		return nil, err
 	}
@@ -56,6 +63,16 @@ func NewRepo(repoPath, branch string) (*GitRepo, error) {
 	}
 
 	return r, nil
+}
+
+func generateGitDirPath(repoPath string) (string, error) {
+	absolutePath, err := filepath.Abs(repoPath)
+
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(absolutePath, ".git"), nil
 }
 
 // Parse tags on repo, sort them, and store the most recent revision in the repo object
