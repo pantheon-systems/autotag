@@ -93,7 +93,7 @@ func newRepoMajor(t *testing.T) GitRepo {
 	seedTestRepo(t, repo)
 	updateReadme(t, repo, "#major change")
 
-	r, err := NewRepo(repo.Path, "master")
+	r, err := NewRepo(GitRepoConfig{RepoPath: repo.Path, Branch: "master"})
 	if err != nil {
 		t.Fatal("Error creating repo", err)
 	}
