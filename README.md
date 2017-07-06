@@ -58,28 +58,71 @@ WISOTT
 This would result in `v1.2.3` becoming `v2.0.0`. Telling `autotag` to increase the `Minor` version is the same as with the `Major`, except
 use `[minor]` or `#minor` instead. A `Minor` version bump would result in a change from `v1.2.3` to `v1.3.0`.
 
+### Pre-Release Tags
+
+The `autotag` package supports providing a `PreReleaseName` and a `PreReleaseTimestampLayout`, which gives you the ability to automatically
+create tags like `v1.2.3-pre.20170706070042`. You can omit the name, or the timestamp, to include as much information as you'd like. The
+timestamp layout value uses the standard layout from the `time` package.
+
+This works by finding the last tag without any pre-release information, say `v1.2.3`. It then bumps the version based on the rules above,
+and appends our pre-release information on to the end starting with a hyphen. For example:
+
+* `-<PreReleaseName>`
+* `-<PreReleaseTimestamp>`
+* `-<PreReleaseName>.<PreReleaseTimestamp>`
+
+The `autotag` binary provides controlled access to this functionality by allowing you to choose one of four pre-release names, as well
+as by either using a UNIX `epoch` timestamp or a `datetime` timestamp in the form of `YYYYMMDDHHMMSS`. The `pre-release-name` is
+implemented in the `-p` flag, while the timestamp layout is implemented in the `-T` flag. See the [Usage](#Usage) section for more
+information.
+
 Usage
 =====
 
-The default behavior with no arguments will tag a new version on current repo and emit the version tagged
+The default behavior with no arguments will tag a new version on current repo and emit the version tagged:
+
 ```
 $ autotag
-v3.2.1
+3.2.1
 ```
 
-you can get more help using -h flag
+`autotag` also supports pre-release tags with the `-p` and `-T` flags, and here are some example:
+
+```
+$ autotag -p pre
+3.2.1-pre
+
+$ autotag -T epoch
+3.2.1-1499320004
+
+$ autotag -T datetime
+3.2.1-20170706054703
+
+$ autotag -p pre -T epoch
+3.2.1-pre.1499319951
+
+$ autotag -p rc -T datetime
+3.2.1-rc.20170706054528
+```
+
+
+You can get more help using the `-h/--help` flag:
+
 ```
 $ autotag -h
 Usage:
   autotag [OPTIONS]
 
 Application Options:
-  -n          Just output the next version, don't autotag
-  -v          Enable verbose logging
-  -r, --repo= Path to the repo (./)
+  -n                           Just output the next version, don't autotag
+  -v                           Enable verbose logging
+  -b, --branch=                Git branch to scan (default: master)
+  -r, --repo=                  Path to the repo (default: ./)
+  -p, --pre-release-name=      create a pre-release tag with this name (can be: alpha|beta|rc|pre|hotfix)
+  -T, --pre-release-timestamp= create a pre-release tag and append a timestamp (can be: datetime|epoch)
 
 Help Options:
-  -h, --help  Show this help message
+  -h, --help                   Show this help message
 ```
 
 Build from Source

@@ -1,10 +1,14 @@
 package autotag
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"log"
 	"path/filepath"
 	"sort"
+	"strconv"
+	"time"
 
 	"regexp"
 
@@ -19,6 +23,46 @@ var (
 	versionRex = regexp.MustCompile(`^v([\d]+\.?.*)`)
 )
 
+// GitRepoConfig is the configuration needed to create a new *GitRepo.
+type GitRepoConfig struct {
+	// Repo is the path to the root of the git repository.
+	RepoPath string
+
+	// Branch is the name of the git branch to be tracked for tags. This value
+	// must be provided.
+	Branch string
+
+	// PreReleaseName is the optional string to be appended to a tag being
+	// generated (e.g., v.1.2.3-pre) to indicate the pre-release type.
+	//
+	// You can provide any string you want (that is valid for a Git tag); here
+	// are some recommended values:
+	//
+	// 		* pre(release)
+	// 		* alpha
+	// 		* beta
+	// 		* rc
+	PreReleaseName string
+
+	// PreReleaseTimestampLayout is the optional value that's used to append a
+	// timestamp to the git tag. The timezone will always be UTC. This value can
+	// either be the string `epoch` to be the UNIX epoch, or a Golang time
+	// layout string:
+	//
+	// * https://golang.org/pkg/time/#pkg-constants
+	//
+	// If PreReleaseName is an empty string, the timestamp will be appended
+	// directly to the SemVer tag:
+	//
+	// 		v1.2.3-1499308568
+	//
+	// Assuming PreReleaseName is set to `pre`, the timestamp is appended to
+	// that value separated by a period (`.`):
+	//
+	// 		v1.2.3-pre.1499308568
+	PreReleaseTimestampLayout string
+}
+
 // GitRepo represents a repository we want to run actions against
 type GitRepo struct {
 	repo *git.Repository
@@ -28,15 +72,18 @@ type GitRepo struct {
 	newVersion     *version.Version
 	branch         string
 	branchID       string // commit id of the branch latest commit (where we will apply the tag)
+
+	preReleaseName            string
+	preReleaseTimestampLayout string
 }
 
 // NewRepo is a constructor for a repo object, parsing the tags that exist
-func NewRepo(repoPath, branch string) (*GitRepo, error) {
-	if branch == "" {
+func NewRepo(cfg GitRepoConfig) (*GitRepo, error) {
+	if cfg.Branch == "" {
 		return nil, fmt.Errorf("must specify a branch")
 	}
 
-	gitDirPath, err := generateGitDirPath(repoPath)
+	gitDirPath, err := generateGitDirPath(cfg.RepoPath)
 
 	if err != nil {
 		return nil, err
@@ -49,8 +96,10 @@ func NewRepo(repoPath, branch string) (*GitRepo, error) {
 	}
 
 	r := &GitRepo{
-		repo:   repo,
-		branch: branch,
+		repo:                      repo,
+		branch:                    cfg.Branch,
+		preReleaseName:            cfg.PreReleaseName,
+		preReleaseTimestampLayout: cfg.PreReleaseTimestampLayout,
 	}
 
 	err = r.parseTags()
@@ -111,17 +160,18 @@ func (r *GitRepo) parseTags() error {
 	}
 	sort.Sort(sort.Reverse(version.Collection(keys)))
 
-	// set the current versions
-	if len(keys) >= 1 {
-		v := keys[0]
-		r.currentVersion = v
-		r.currentTag = versions[v]
-
-		//		log.Printf("Current latest version is %s at obj: %s id: %s", r.currentVersion, r.currentTag.Object, r.currentTag.Id)
-		return nil
+	// loop over the tags and find the last reachable non pre-release tag,
+	// because we want to calculate the tag from v1.2.3 not v1.2.4-pre1.`
+	for _, version := range keys {
+		if len(version.Prerelease()) == 0 {
+			r.currentVersion = version
+			r.currentTag = versions[version]
+			return nil
+		}
+		log.Printf("skipping pre-release tag version: %s", version.String())
 	}
 
-	return fmt.Errorf("no version tags found")
+	return fmt.Errorf("no stable (non pre-release) version tags found")
 
 }
 
@@ -169,6 +219,52 @@ func (r *GitRepo) retrieveBranchInfo() error {
 	return nil
 }
 
+func preReleaseVersion(v *version.Version, name, tsLayout string) (*version.Version, error) {
+	if len(name) == 0 && len(tsLayout) == 0 {
+		return v, nil
+	}
+
+	if len(v.Prerelease()) > 0 {
+		return nil, errors.New("*version.Version already has a PreRelease value set")
+	}
+
+	buf := &bytes.Buffer{}
+
+	if _, err := buf.WriteString(name); err != nil {
+		return nil, err
+	}
+
+	if len(tsLayout) > 0 {
+		// XXX(theckman): if the buffer already has content written to it, add
+		// the `.` character as a delimiter. The `+` character was not used as
+		// the delimiter because some systems that support version tags do not
+		// allow it within the string (looking at you, Docker).
+		if buf.Len() > 0 {
+			if _, err := buf.WriteString("."); err != nil {
+				return nil, err
+			}
+		}
+
+		var (
+			timestamp   string
+			currentTime = time.Now().UTC()
+		)
+
+		if tsLayout == "epoch" {
+			timestamp = strconv.FormatInt(currentTime.Unix(), 10)
+		} else {
+			timestamp = currentTime.Format(tsLayout)
+		}
+
+		if _, err := buf.WriteString(timestamp); err != nil {
+			return nil, err
+		}
+	}
+
+	verStr := fmt.Sprintf("%s-%s", v.String(), buf.String())
+	return version.NewVersion(verStr)
+}
+
 // calcVersion looks over commits since the last tag, and will apply the version bump needed. It will patch if no other instruction is found
 // it populates the repo.newVersion with the new calculated version
 func (r *GitRepo) calcVersion() error {
@@ -212,6 +308,14 @@ func (r *GitRepo) calcVersion() error {
 			return err
 		}
 	}
+
+	// if we want this to be a PreRelease tag, we need to enhance the format a bit
+	if len(r.preReleaseName) > 0 || len(r.preReleaseTimestampLayout) > 0 {
+		if r.newVersion, err = preReleaseVersion(r.newVersion, r.preReleaseName, r.preReleaseTimestampLayout); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
