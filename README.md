@@ -37,7 +37,8 @@ in a commit to tell `autotag` to increment the `Major` and `Minor` versions.
 ### Incrementing Major and Minor versions
 
 When the `autotag` utility inspects the commits between the latest tag and `HEAD`, it looks for certain strings to tell it to increment
-something other than the `Patch` version. This is a simple regular expression match against your commit message.
+something other than the `Patch` version. This is a simple regular expression match against your commit message subject. If you don't
+place the marker in your commit subject line, `autotag` will not observe it and won't correctly bump the version.
 
 To increase your `Major` version, you can include either `[major]` or `#major` in your commit message. That means you can have the subject
 of your commit be:
@@ -46,13 +47,10 @@ of your commit be:
 [major] version bump in preparation for release
 ```
 
-Likewise, you can include them anywhere in your commit message:
+Or if you prefer hashtags:
 
 ```
-Fix the thing with the stuff
-
-WISOTT
-#major
+#major version bump in preparation for release
 ```
 
 This would result in `v1.2.3` becoming `v2.0.0`. Telling `autotag` to increase the `Minor` version is the same as with the `Major`, except
