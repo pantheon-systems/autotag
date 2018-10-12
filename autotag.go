@@ -20,7 +20,7 @@ var (
 	majorRex   = regexp.MustCompile(`(?i)\[major\]|\#major`)
 	minorRex   = regexp.MustCompile(`(?i)\[minor\]|\#minor`)
 	patchRex   = regexp.MustCompile(`(?i)\[patch\]|\#patch`)
-	versionRex = regexp.MustCompile(`^v([\d]+\.?.*)`)
+	versionRex = regexp.MustCompile(`^v?([\d]+\.?.*)`)
 )
 
 // GitRepoConfig is the configuration needed to create a new *GitRepo.
@@ -61,6 +61,9 @@ type GitRepoConfig struct {
 	//
 	// 		v1.2.3-pre.1499308568
 	PreReleaseTimestampLayout string
+
+	// Prefix adds v to version
+	Prefix bool
 }
 
 // GitRepo represents a repository we want to run actions against
@@ -75,6 +78,8 @@ type GitRepo struct {
 
 	preReleaseName            string
 	preReleaseTimestampLayout string
+
+	prefix bool
 }
 
 // NewRepo is a constructor for a repo object, parsing the tags that exist
@@ -100,6 +105,7 @@ func NewRepo(cfg GitRepoConfig) (*GitRepo, error) {
 		branch:                    cfg.Branch,
 		preReleaseName:            cfg.PreReleaseName,
 		preReleaseTimestampLayout: cfg.PreReleaseTimestampLayout,
+		prefix:                    cfg.Prefix,
 	}
 
 	err = r.parseTags()
@@ -288,7 +294,7 @@ func (r *GitRepo) calcVersion() error {
 	for e := l.Back(); e != nil; e = e.Prev() {
 		commit := e.Value.(*git.Commit)
 		if commit == nil {
-			return fmt.Errorf("commit pointed to nil object. This should not happen: %s", e)
+			return fmt.Errorf("commit pointed to nil object. This should not happen: %v", e)
 		}
 
 		v, nerr := r.parseCommit(commit)
@@ -327,8 +333,12 @@ func (r *GitRepo) AutoTag() error {
 func (r *GitRepo) tagNewVersion() error {
 	// TODO:(jnelson) These should be configurable? Mon Sep 14 12:02:52 2015
 	tagName := fmt.Sprintf("v%s", r.newVersion.String())
+	if !r.prefix {
+		tagName = r.newVersion.String()
+	}
 
 	log.Println("Writing Tag", tagName)
+
 	err := r.repo.CreateTag(tagName, r.branchID)
 	if err != nil {
 		return fmt.Errorf("error creating tag: %s", err.Error())

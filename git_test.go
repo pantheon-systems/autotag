@@ -85,15 +85,15 @@ func makeTag(r *git.Repository, tag string) {
 }
 
 // adds a #major comit to the repo
-func newRepoMajor(t *testing.T) GitRepo {
+func newRepoMajorPrefixToggle(t *testing.T, prefix bool) GitRepo {
 	tr := createTestRepo(t)
 
 	repo, err := git.OpenRepository(tr)
 	checkFatal(t, err)
-	seedTestRepo(t, repo)
+	seedTestRepoPrefixToggle(t, repo, prefix)
 	updateReadme(t, repo, "#major change")
 
-	r, err := NewRepo(GitRepoConfig{RepoPath: repo.Path, Branch: "master"})
+	r, err := NewRepo(GitRepoConfig{RepoPath: repo.Path, Branch: "master", Prefix: prefix})
 	if err != nil {
 		t.Fatal("Error creating repo", err)
 	}
@@ -102,6 +102,10 @@ func newRepoMajor(t *testing.T) GitRepo {
 }
 
 func seedTestRepo(t *testing.T, repo *git.Repository) {
+	seedTestRepoPrefixToggle(t, repo, true)
+}
+
+func seedTestRepoPrefixToggle(t *testing.T, repo *git.Repository, prefix bool) {
 	f := repoRoot(repo) + "/README"
 	err := exec.Command("touch", f).Run()
 	if err != nil {
@@ -110,7 +114,11 @@ func seedTestRepo(t *testing.T, repo *git.Repository) {
 	}
 
 	makeCommit(repo, "this is a commit")
-	makeTag(repo, "v1.0.1")
+	if prefix {
+		makeTag(repo, "v1.0.1")
+	} else {
+		makeTag(repo, "1.0.1")
+	}
 }
 
 func majorTag(t *testing.T, repo *git.Repository) {

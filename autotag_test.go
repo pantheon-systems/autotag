@@ -2,25 +2,25 @@ package autotag
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 	"time"
 
 	"github.com/gogits/git-module"
 )
 
-func newRepo(t *testing.T, preName, preLayout string) GitRepo {
+func newRepo(t *testing.T, preName, preLayout string, prefix bool) GitRepo {
 	path := createTestRepo(t)
 
 	repo, err := git.OpenRepository(path)
 	checkFatal(t, err)
 
-	seedTestRepo(t, repo)
+	seedTestRepoPrefixToggle(t, repo, prefix)
 	r, err := NewRepo(GitRepoConfig{
 		RepoPath:                  repo.Path,
 		Branch:                    "master",
 		PreReleaseName:            preName,
 		PreReleaseTimestampLayout: preLayout,
+		Prefix:                    prefix,
 	})
 	if err != nil {
 		t.Fatal("Error creating repo", err)
@@ -29,15 +29,19 @@ func newRepo(t *testing.T, preName, preLayout string) GitRepo {
 	return *r
 }
 
-func newRepoWithPreReleasedTag(t *testing.T) GitRepo {
+func newRepoWithPreReleasedTag(t *testing.T, prefix bool) GitRepo {
 	path := createTestRepo(t)
 
 	repo, err := git.OpenRepository(path)
 	checkFatal(t, err)
-	seedTestRepo(t, repo)
-	makeTag(repo, "v1.0.2-pre")
+	seedTestRepoPrefixToggle(t, repo, prefix)
+	if prefix {
+		makeTag(repo, "v1.0.2-pre")
+	} else {
+		makeTag(repo, "1.0.2-pre")
+	}
 
-	r, err := NewRepo(GitRepoConfig{RepoPath: repo.Path, Branch: "master"})
+	r, err := NewRepo(GitRepoConfig{RepoPath: repo.Path, Branch: "master", Prefix: prefix})
 	if err != nil {
 		t.Fatal("Error creating repo", err)
 	}
@@ -46,7 +50,7 @@ func newRepoWithPreReleasedTag(t *testing.T) GitRepo {
 }
 
 func TestBumpers(t *testing.T) {
-	r := newRepo(t, "", "")
+	r := newRepo(t, "", "", true)
 	defer cleanupTestRepo(t, r.repo)
 
 	majorTag(t, r.repo)
@@ -62,7 +66,7 @@ func TestBumpers(t *testing.T) {
 	fmt.Printf("Major is now %s\n", v)
 }
 func TestMinor(t *testing.T) {
-	r := newRepo(t, "", "")
+	r := newRepo(t, "", "", true)
 	defer cleanupTestRepo(t, r.repo)
 
 	majorTag(t, r.repo)
@@ -76,7 +80,7 @@ func TestMinor(t *testing.T) {
 	}
 }
 func TestPatch(t *testing.T) {
-	r := newRepo(t, "", "")
+	r := newRepo(t, "", "", true)
 	defer cleanupTestRepo(t, r.repo)
 
 	majorTag(t, r.repo)
@@ -91,65 +95,83 @@ func TestPatch(t *testing.T) {
 }
 
 func TestAutoTag(t *testing.T) {
-	r := newRepo(t, "", "")
-	defer cleanupTestRepo(t, r.repo)
+	expected := []string{"v1.0.2", "v1.0.1"}
+	test := "TestAutoTag"
 
-	err := r.AutoTag()
-	if err != nil {
-		t.Fatal("AutoTag failed ", err)
+	tags := prepareRepository(t, true)
+	if !compareValues(expected, tags) {
+		t.Fatalf("%s expected '%+v' got '%+v'\n", test, expected, tags)
 	}
+}
 
-	tags, err := r.repo.GetTags()
-	checkFatal(t, err)
+func TestAutoTagNoPrefix(t *testing.T) {
+	expected := []string{"1.0.2", "1.0.1"}
+	test := "TestAutoTagNoPrefix"
+	tags := prepareRepository(t, false)
 
-	// XXX(fujin): When switching to `git-module`, the sort order reversed. Most recent is first.
-	expect := []string{"v1.0.2", "v1.0.1"}
-
-	if !reflect.DeepEqual(expect, tags) {
-		t.Fatalf("AutoBump expected '%+v' got '%+v'\n", expect, tags)
+	if !compareValues(expected, tags) {
+		t.Fatalf("%s expected '%+v' got '%+v'\n", test, expected, tags)
 	}
 }
 
 func TestAutoTagCommits(t *testing.T) {
-	r := newRepoMajor(t)
-	defer cleanupTestRepo(t, r.repo)
+	tags := prepareRepositoryMajor(t, true)
 
+	expect := []string{"v2.0.0", "v1.0.1"}
+	test := "TestAutoTagCommits"
+
+	if !compareValues(expect, tags) {
+		t.Fatalf("%s expected '%+v' got '%+v'\n", test, expect, tags)
+	}
+}
+
+func prepareRepositoryMajor(t *testing.T, prefix bool) []string {
+	r := newRepoMajorPrefixToggle(t, prefix)
+	defer cleanupTestRepo(t, r.repo)
 	err := r.AutoTag()
 	if err != nil {
 		t.Fatal("AutoTag failed ", err)
 	}
-
 	tags, err := r.repo.GetTags()
 	checkFatal(t, err)
-	// XXX(fujin): When switching to `git-module`, the sort order reversed. Most recent is first.
-	expect := []string{"v2.0.0", "v1.0.1"}
+	return tags
+}
 
-	if !reflect.DeepEqual(expect, tags) {
-		t.Fatalf("AutoBump expected '%+v' got '%+v'\n", expect, tags)
+func TestAutoTagCommitsNoPrefix(t *testing.T) {
+	tags := prepareRepositoryMajor(t, false)
+
+	expect := []string{"2.0.0", "1.0.1"}
+	test := "TestAutoTagCommitsNoPrefix"
+
+	if !compareValues(expect, tags) {
+		t.Fatalf("%s expected '%+v' got '%+v'\n", test, expect, tags)
 	}
 }
 
 func TestAutoTagWithPreReleasedTag(t *testing.T) {
-	r := newRepoWithPreReleasedTag(t)
-	defer cleanupTestRepo(t, r.repo)
-
-	err := r.AutoTag()
-	if err != nil {
-		t.Fatal("AutoTag failed ", err)
-	}
-
-	tags, err := r.repo.GetTags()
-	checkFatal(t, err)
+	tags := prepareRepositoryPreReleasedTag(t, true)
 
 	expect := []string{"v1.0.2-pre", "v1.0.2", "v1.0.1"}
+	test := "TestAutoTagWithPreReleasedTag"
 
-	if !reflect.DeepEqual(expect, tags) {
-		t.Fatalf("AutoBump expected '%+v' got '%+v'\n", expect, tags)
+	if !compareValues(expect, tags) {
+		t.Fatalf("%s expected '%+v' got '%+v'\n", test, expect, tags)
+	}
+}
+
+func TestAutoTagWithPreReleasedTagNoPrefix(t *testing.T) {
+	tags := prepareRepositoryPreReleasedTag(t, false)
+
+	test := "TestAutoTagWithPreReleasedTag"
+	expect := []string{"1.0.2-pre", "1.0.2", "1.0.1"}
+
+	if !compareValues(expect, tags) {
+		t.Fatalf("%s expected '%+v' got '%+v'\n", test, expect, tags)
 	}
 }
 
 func TestAutoTagWithPreReleaseName(t *testing.T) {
-	r := newRepo(t, "test", "")
+	r := newRepo(t, "test", "", true)
 	defer cleanupTestRepo(t, r.repo)
 
 	err := r.AutoTag()
@@ -162,13 +184,32 @@ func TestAutoTagWithPreReleaseName(t *testing.T) {
 
 	expect := []string{"v1.0.2-test", "v1.0.1"}
 
-	if !reflect.DeepEqual(expect, tags) {
-		t.Fatalf("AutoBump expected '%+v' got '%+v'\n", expect, tags)
+	if !compareValues(expect, tags) {
+		t.Fatalf("TestAutoTagWithPreReleaseName expected '%+v' got '%+v'\n", expect, tags)
+	}
+}
+
+func TestAutoTagWithPreReleaseNameNoPrefix(t *testing.T) {
+	r := newRepo(t, "test", "", false)
+	defer cleanupTestRepo(t, r.repo)
+
+	err := r.AutoTag()
+	if err != nil {
+		t.Fatal("AutoTag failed ", err)
+	}
+
+	tags, err := r.repo.GetTags()
+	checkFatal(t, err)
+
+	expect := []string{"1.0.2-test", "1.0.1"}
+
+	if !compareValues(expect, tags) {
+		t.Fatalf("TestAutoTagWithPreReleaseNameNoPrefix expected '%+v' got '%+v'\n", expect, tags)
 	}
 }
 
 func TestAutoTagWithPreReleaseTimestampLayout_Epoch(t *testing.T) {
-	r := newRepo(t, "", "epoch")
+	r := newRepo(t, "", "epoch", true)
 	defer cleanupTestRepo(t, r.repo)
 
 	err := r.AutoTag()
@@ -183,15 +224,36 @@ func TestAutoTagWithPreReleaseTimestampLayout_Epoch(t *testing.T) {
 
 	expect := []string{fmt.Sprintf("v1.0.2-%d", timeNow.Unix()), "v1.0.1"}
 
-	if !reflect.DeepEqual(expect, tags) {
-		t.Fatalf("AutoBump expected '%+v' got '%+v'\n", expect, tags)
+	if !compareValues(expect, tags) {
+		t.Fatalf("TestAutoTagWithPreReleaseTimestampLayout_Epoch expected '%+v' got '%+v'\n", expect, tags)
+	}
+}
+
+func TestAutoTagWithPreReleaseTimestampLayout_EpochNoPrefix(t *testing.T) {
+	r := newRepo(t, "", "epoch", false)
+	defer cleanupTestRepo(t, r.repo)
+
+	err := r.AutoTag()
+	timeNow := time.Now().UTC()
+
+	if err != nil {
+		t.Fatal("AutoTag failed ", err)
+	}
+
+	tags, err := r.repo.GetTags()
+	checkFatal(t, err)
+
+	expect := []string{fmt.Sprintf("1.0.2-%d", timeNow.Unix()), "1.0.1"}
+
+	if !compareValues(expect, tags) {
+		t.Fatalf("TestAutoTagWithPreReleaseTimestampLayout_EpochNoPrefix expected '%+v' got '%+v'\n", expect, tags)
 	}
 }
 
 const testDatetimeLayout = "20060102150405"
 
 func TestAutoTagWithPreReleaseTimestampLayout_Datetime(t *testing.T) {
-	r := newRepo(t, "", testDatetimeLayout)
+	r := newRepo(t, "", testDatetimeLayout, true)
 	defer cleanupTestRepo(t, r.repo)
 
 	err := r.AutoTag()
@@ -206,13 +268,34 @@ func TestAutoTagWithPreReleaseTimestampLayout_Datetime(t *testing.T) {
 
 	expect := []string{fmt.Sprintf("v1.0.2-%s", timeNow.Format(testDatetimeLayout)), "v1.0.1"}
 
-	if !reflect.DeepEqual(expect, tags) {
+	if !compareValues(expect, tags) {
+		t.Fatalf("AutoBump expected '%+v' got '%+v'\n", expect, tags)
+	}
+}
+
+func TestAutoTagWithPreReleaseTimestampLayout_DatetimeNoPrefix(t *testing.T) {
+	r := newRepo(t, "", testDatetimeLayout, false)
+	defer cleanupTestRepo(t, r.repo)
+
+	err := r.AutoTag()
+	timeNow := time.Now().UTC()
+
+	if err != nil {
+		t.Fatal("AutoTag failed ", err)
+	}
+
+	tags, err := r.repo.GetTags()
+	checkFatal(t, err)
+
+	expect := []string{fmt.Sprintf("1.0.2-%s", timeNow.Format(testDatetimeLayout)), "1.0.1"}
+
+	if !compareValues(expect, tags) {
 		t.Fatalf("AutoBump expected '%+v' got '%+v'\n", expect, tags)
 	}
 }
 
 func TestAutoTagWithPreReleaseNameAndPreReleaseTimestampLayout(t *testing.T) {
-	r := newRepo(t, "test", "epoch")
+	r := newRepo(t, "test", "epoch", true)
 	defer cleanupTestRepo(t, r.repo)
 
 	err := r.AutoTag()
@@ -227,7 +310,69 @@ func TestAutoTagWithPreReleaseNameAndPreReleaseTimestampLayout(t *testing.T) {
 
 	expect := []string{fmt.Sprintf("v1.0.2-test.%d", timeNow.Unix()), "v1.0.1"}
 
-	if !reflect.DeepEqual(expect, tags) {
-		t.Fatalf("AutoBump expected '%+v' got '%+v'\n", expect, tags)
+	if !compareValues(expect, tags) {
+		t.Fatalf("TestAutoTagWithPreReleaseNameAndPreReleaseTimestampLayout expected '%+v' got '%+v'\n", expect, tags)
 	}
+}
+
+func TestAutoTagWithPreReleaseNameAndPreReleaseTimestampLayoutNoPrefix(t *testing.T) {
+	r := newRepo(t, "test", "epoch", false)
+	defer cleanupTestRepo(t, r.repo)
+
+	err := r.AutoTag()
+	timeNow := time.Now().UTC()
+
+	if err != nil {
+		t.Fatal("AutoTag failed ", err)
+	}
+
+	tags, err := r.repo.GetTags()
+	checkFatal(t, err)
+
+	expect := []string{fmt.Sprintf("1.0.2-test.%d", timeNow.Unix()), "1.0.1"}
+
+	if !compareValues(expect, tags) {
+		t.Fatalf("TestAutoTagWithPreReleaseNameAndPreReleaseTimestampLayoutNoPrefix expected '%+v' got '%+v'\n", expect, tags)
+	}
+}
+
+func compareValues(expect []string, tags []string) bool {
+	found := true
+	for _, val := range expect {
+		found = found && hasValue(tags, val)
+	}
+	return found
+}
+
+func hasValue(tags []string, value string) bool {
+	for _, tag := range tags {
+		if tag == value {
+			return true
+		}
+	}
+	return false
+}
+
+func prepareRepository(t *testing.T, prefix bool) []string {
+	r := newRepo(t, "", "", prefix)
+	defer cleanupTestRepo(t, r.repo)
+	err := r.AutoTag()
+	if err != nil {
+		t.Fatal("AutoTag failed ", err)
+	}
+	tags, err := r.repo.GetTags()
+	checkFatal(t, err)
+	return tags
+}
+
+func prepareRepositoryPreReleasedTag(t *testing.T, prefix bool) []string {
+	r := newRepoWithPreReleasedTag(t, prefix)
+	defer cleanupTestRepo(t, r.repo)
+	err := r.AutoTag()
+	if err != nil {
+		t.Fatal("AutoTag failed ", err)
+	}
+	tags, err := r.repo.GetTags()
+	checkFatal(t, err)
+	return tags
 }
