@@ -112,6 +112,7 @@ Usage:
   autotag [OPTIONS]
 
 Application Options:
+  -e                           Do not prepend version with literal 'v'
   -n                           Just output the next version, don't autotag
   -v                           Enable verbose logging
   -b, --branch=                Git branch to scan (default: master)
