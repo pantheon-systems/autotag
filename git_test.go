@@ -101,10 +101,6 @@ func newRepoMajorPrefixToggle(t *testing.T, prefix bool) GitRepo {
 	return *r
 }
 
-func seedTestRepo(t *testing.T, repo *git.Repository) {
-	seedTestRepoPrefixToggle(t, repo, true)
-}
-
 func seedTestRepoPrefixToggle(t *testing.T, repo *git.Repository, prefix bool) {
 	f := repoRoot(repo) + "/README"
 	err := exec.Command("touch", f).Run()
