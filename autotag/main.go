@@ -18,7 +18,7 @@ type Options struct {
 	RepoPath            string `short:"r" long:"repo" description:"Path to the repo" default:"./" `
 	PreReleaseName      string `short:"p" long:"pre-release-name" description:"create a pre-release tag with this name (can be: alpha|beta|pre|rc)"`
 	PreReleaseTimestamp string `short:"T" long:"pre-release-timestamp" description:"create a pre-release tag and append a timestamp (can be: datetime|epoch)"`
-	NoVersionPrefix     bool   `short:"-e" long:"empty-version-prefix" description:"do not prepend v to version tag"`
+	NoVersionPrefix     bool   `short:"e" long:"empty-version-prefix" description:"do not prepend v to version tag"`
 }
 
 var opts Options
