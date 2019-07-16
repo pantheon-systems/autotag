@@ -8,15 +8,16 @@ AutoTag
 Automatically add version tags to a git repo based on commit messages.
 
 Dependencies
-==========
+============
+
 * [Git 2.x](https://git-scm.com/downloads) available in PATH
 
 Installing
 ==========
 
-On Linux the easy way to get going is to use the pre-built binary release from [GitHub Releases](https://github.com/pantheon-systems/autotag/releases). 
+On Linux the easy way to get going is to use the pre-built binary release from [GitHub Releases](https://github.com/pantheon-systems/autotag/releases).
 
-If using a recent version that depends on the Git CLI, install Git with your distribution's package management system. 
+If using a recent version that depends on the Git CLI, install Git with your distribution's package management system.
 
 If using an older release with cgo libgit or native golang Git, the binary will work standalone.
 
@@ -43,13 +44,13 @@ place the marker in your commit subject line, `autotag` will not observe it and 
 To increase your `Major` version, you can include either `[major]` or `#major` in your commit message. That means you can have the subject
 of your commit be:
 
-```
+```console
 [major] version bump in preparation for release
 ```
 
 Or if you prefer hashtags:
 
-```
+```console
 #major version bump in preparation for release
 ```
 
@@ -79,14 +80,14 @@ Usage
 
 The default behavior with no arguments will tag a new version on current repo and emit the version tagged:
 
-```
+```console
 $ autotag
 3.2.1
 ```
 
 `autotag` also supports pre-release tags with the `-p` and `-T` flags, and here are some example:
 
-```
+```console
 $ autotag -p pre
 3.2.1-pre
 
@@ -103,10 +104,9 @@ $ autotag -p rc -T datetime
 3.2.1-rc.20170706054528
 ```
 
-
 You can get more help using the `-h/--help` flag:
 
-```
+```console
 $ autotag -h
 Usage:
   autotag [OPTIONS]
@@ -125,11 +125,11 @@ Help Options:
 
 Build from Source
 =================
+
 Assuming you have Go 1.5+ installed you can checkout and run make deps build to compile the binary. It will be built as ./autotag/autotag
 
-
-```
-git clone git@github.com:pantheon-systems/autotag.git 
+```console
+git clone git@github.com:pantheon-systems/autotag.git
 
 cd autotag
 
