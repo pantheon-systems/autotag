@@ -1,0 +1,76 @@
+---
+version: 2.1
+
+executors:
+  go-build:
+    docker:
+      - image: circleci/golang:1.12
+
+commands:
+  save-go-mod-cache:
+    steps:
+      - save_cache:
+          key: v1-dependencies-{{ checksum "go.sum" }}
+          paths:
+            - /go/pkg/mod
+
+  restore-go-mod-cache:
+    steps:
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "go.sum" }}
+
+  save-workspace:
+    steps:
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./
+
+  restore-workspace:
+    steps:
+      - attach_workspace:
+          at: .
+
+jobs:
+  test:
+    executor: go-build
+    steps:
+      - checkout
+      - restore-go-mod-cache
+      # commands
+      - run: |
+          git config --global user.email circleci
+          git config --global user.name circleci
+      - run: make deps-coverage
+      - run: go get
+      - run: make test-circle
+      - run: make build
+      # persist
+      - save-go-mod-cache
+      - save-workspace
+
+  release:
+    executor: go-build
+    steps:
+      - restore-workspace
+      - restore-go-mod-cache
+      # commands
+      - run: |
+          # ./autotag/autotag binary from the test job is not saved to the workspace with +x bit, restore it
+          chmod +x ./autotag/autotag
+      - run: GO111MODULE=off go get github.com/aktau/github-release
+      - run: make release
+
+workflows:
+  version: 2
+  primary:
+    jobs:
+      - test
+      - release:
+          requires:
+            - test
+          filters:
+            branches:
+              only:
+                - master
