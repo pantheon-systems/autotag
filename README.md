@@ -1,19 +1,19 @@
+AutoTag
+=======
+
 [![Circle CI](https://circleci.com/gh/pantheon-systems/autotag.svg?style=shield&circle-token=ef9a68c180d0d470c594d39caf9e2a86fc529935)](https://circleci.com/gh/pantheon-systems/autotag)
 [![Coverage Status](https://coveralls.io/repos/github/pantheon-systems/autotag/badge.svg?branch=master)](https://coveralls.io/github/pantheon-systems/autotag?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/pantheon-systems/autotag)](https://goreportcard.com/report/github.com/pantheon-systems/autotag)
 
-AutoTag
--------
-
 Automatically add version tags to a git repo based on commit messages.
 
 Dependencies
-============
+------------
 
 * [Git 2.x](https://git-scm.com/downloads) available in PATH
 
 Installing
-==========
+----------
 
 On Linux the easy way to get going is to use the pre-built binary release from [GitHub Releases](https://github.com/pantheon-systems/autotag/releases).
 
@@ -22,7 +22,7 @@ If using a recent version that depends on the Git CLI, install Git with your dis
 If using an older release with cgo libgit or native golang Git, the binary will work standalone.
 
 Calculating Tags
-================
+----------------
 
 The `autotag` utility will use the current state of the git repository to determine what the next tag should be (when following SemVer 2.0).
 Tags created by `autotag` have the following format: `vMajor.Minor.Patch` (e.g., `v1.2.3`).
@@ -76,7 +76,7 @@ implemented in the `-p` flag, while the timestamp layout is implemented in the `
 information.
 
 Usage
-=====
+-----
 
 The default behavior with no arguments will tag a new version on current repo and emit the version tagged:
 
@@ -124,7 +124,7 @@ Help Options:
 ```
 
 Build from Source
-=================
+-----------------
 
 Assuming you have Go 1.5+ installed you can checkout and run make deps build to compile the binary. It will be built as ./autotag/autotag
 
