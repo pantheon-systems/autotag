@@ -204,9 +204,9 @@ func parseVersion(v string) (*version.Version, error) {
 }
 
 // LatestVersion Reports the Lattest version of the given repo
-// TODO:(jnelson) this could be more intelligent, looking for a nil new and reporitng the latest version found if we refactor autobump at some point Mon Sep 14 13:05:49 2015
+// TODO:(jnelson) this could be more intelligent, looking for a nil new and reporting the latest version found if we refactor autobump at some point Mon Sep 14 13:05:49 2015
 func (r *GitRepo) LatestVersion() string {
-	return fmt.Sprintf("%s", r.newVersion)
+	return r.newVersion.String()
 }
 
 func (r *GitRepo) retrieveBranchInfo() error {
@@ -288,7 +288,7 @@ func (r *GitRepo) calcVersion() error {
 	for e := l.Back(); e != nil; e = e.Prev() {
 		commit := e.Value.(*git.Commit)
 		if commit == nil {
-			return fmt.Errorf("commit pointed to nil object. This should not happen: %s", e)
+			return fmt.Errorf("commit pointed to nil object. This should not happen: %v", e)
 		}
 
 		v, nerr := r.parseCommit(commit)
