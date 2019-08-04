@@ -10,7 +10,7 @@ Automatically add version tags to a git repo based on commit messages.
 Dependencies
 ------------
 
-* [Git 2.x](https://git-scm.com/downloads) available in PATH (version v1.0.0+)
+* [Git 2.x](https://git-scm.com/downloads) available in PATH
 
 Installing
 ----------
