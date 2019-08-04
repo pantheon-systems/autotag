@@ -1,15 +1,7 @@
-APP=autotag
+APP := autotag
 
 include scripts/make/common.mk
 include scripts/make/common-go.mk
-
-# need to be able to commit with git to run tests on cirlce
-deps-circle::
-	git config --global user.email circleci
-	git config --global user.name circleci
-ifeq (, $(shell which gihub-release))
-	go get github.com/aktau/github-release
-endif
 
 build::
 	go build -o $(APP)/$(APP)  $(APP)/*.go
