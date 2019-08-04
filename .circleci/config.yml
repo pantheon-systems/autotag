@@ -53,14 +53,17 @@ jobs:
   release:
     executor: go-build
     steps:
+      - setup_remote_docker
       - restore-workspace
       - restore-go-mod-cache
       # commands
+      - run: docker login -u "$QUAY_USER" -p "$QUAY_PASSWD" quay.io
+      - run: sudo apt-get -qqy update && sudo apt-get -qqy install rpm
       - run: |
           # ./autotag/autotag binary from the test job is not saved to the workspace with +x bit, restore it
           chmod +x ./autotag/autotag
-      - run: GO111MODULE=off go get github.com/aktau/github-release
-      - run: make release
+      - run: ./autotag/autotag
+      - run: curl -sL https://git.io/goreleaser | bash -s -- --parallelism=2
 
 workflows:
   version: 2
