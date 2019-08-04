@@ -12,14 +12,40 @@ Dependencies
 
 * [Git 2.x](https://git-scm.com/downloads) available in PATH
 
-Installing
-----------
-
-On Linux the easy way to get going is to use the pre-built binary release from [GitHub Releases](https://github.com/pantheon-systems/autotag/releases).
-
 Version v1.0.0+ depends on the Git CLI, install Git with your distribution's package management system.
 
 Versions prior to v1.0.0 use cgo libgit or native golang Git, the binary will work standalone.
+
+Installing
+----------
+
+### Pre-built binaries
+
+| OS    | Arch  | binary              |
+| ----- | ----- | ------------------- |
+| macOS | amd64 | [autotag][releases] |
+| Linux | amd64 | [autotag][releases] |
+
+### Docker images
+
+| Arch  | Images                                                           |
+| ----- | ---------------------------------------------------------------- |
+| amd64 | `quay.io/pantheon-public/autotag:latest`, `vX.Y.Z`, `vX.Y`, `vX` |
+
+[releases]: https://github.com/pantheon-systems/autotag/releases/latest
+
+### One-liner
+
+Install Linux binary at `./autotag`. For example in a `Dockerfile` or a CI/CD pipeline:
+
+```bash
+curl -s https://api.github.com/repos/pantheon-systems/autotag/releases/latest | \
+  grep browser_download | \
+  grep Linux | \
+  cut -d '"' -f 4 | \
+  xargs curl -o ./autotag -L \
+  && chmod 755 ./autotag
+```
 
 Calculating Tags
 ----------------
@@ -118,6 +144,7 @@ Application Options:
   -r, --repo=                  Path to the repo (default: ./)
   -p, --pre-release-name=      create a pre-release tag with this name (can be: alpha|beta|rc|pre|hotfix)
   -T, --pre-release-timestamp= create a pre-release tag and append a timestamp (can be: datetime|epoch)
+      --version                Print autotag version
 
 Help Options:
   -h, --help                   Show this help message
@@ -126,12 +153,12 @@ Help Options:
 Build from Source
 -----------------
 
-Assuming you have Go 1.5+ installed you can checkout and run make deps build to compile the binary. It will be built as ./autotag/autotag
+Assuming you have Go 1.5+ installed you can checkout and run make deps build to compile the binary. It will be built as `./autotag/autotag`.
 
 ```console
 git clone git@github.com:pantheon-systems/autotag.git
 
 cd autotag
 
-make deps build
+make build
 ```

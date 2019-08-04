@@ -1,0 +1,85 @@
+project_name: autotag
+env:
+  - GO111MODULE=on
+  - GOPROXY=https://proxy.golang.org
+builds:
+  - binary: autotag
+    id: macos
+    main: autotag/main.go
+    ldflags:
+      - -s -w -X main.version={{.Version}}+{{.ShortCommit}}
+    goos:
+      - darwin
+    goarch:
+      - amd64
+
+  - binary: autotag
+    id: linux
+    main: autotag/main.go
+    ldflags:
+      - -s -w -X main.version={{.Version}}+{{.ShortCommit}}
+    goos:
+      - linux
+    goarch:
+      - amd64
+
+  # TODO: verify windows functionality then enable windows release binaries
+  # - binary: autotag
+  #   id: windows
+  #   main: autotag/main.go
+  #   ldflags:
+  #     - -s -w -X main.version={{.Version}}+{{.ShortCommit}}
+  #   goos:
+  #     - windows
+  #   goarch:
+  #     - amd64
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^readme:'
+    - '^test:'
+    - Merge pull request
+    - Merge branch
+
+# GPG signing
+# TODO: consider implementing a "project signing key"
+# sign:
+#   artifacts: checksum
+
+archives:
+  # Binary named 'Linux' for backwards compatibility with old release format
+  - id: old-format-liinux
+    builds: ["linux"]
+    format: binary
+    name_template: "Linux"
+  # Binary named 'OSX' for backwards compatibility with old release format
+  - id: old-format-osx
+    builds: ["macos"]
+    format: binary
+    name_template: "OSX"
+
+# homebrew
+# brews:
+#   - ids:
+#       - archives
+#     github:
+#       owner: pantheon-systems
+#       name: homebrew-taps
+#     commit_author:
+#       name: pantheon releases
+#       email: infrastructure@pantheon.io
+#     folder: Formula
+#     homepage: "https://github.com/pantheon-systems/autotag"
+#     description: "Automatically add version tags to a git repo based on commit messages."
+
+dockers:
+  -
+    dockerfile: Dockerfile
+    image_templates:
+     - "quay.io/pantheon-public/autotag:{{ .Tag }}"                  # v1.0.0
+     - "quay.io/pantheon-public/autotag:v{{ .Major }}"               # v1
+     - "quay.io/pantheon-public/autotag:v{{ .Major }}.{{ .Minor }}"  # v1.0
+     - "quay.io/pantheon-public/autotag:latest"
