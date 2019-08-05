@@ -16,7 +16,7 @@ type Options struct {
 	Verbose             bool   `short:"v" description:"Enable verbose logging"`
 	Branch              string `short:"b" long:"branch" description:"Git branch to scan" default:"master" `
 	RepoPath            string `short:"r" long:"repo" description:"Path to the repo" default:"./" `
-	PreReleaseName      string `short:"p" long:"pre-release-name" description:"create a pre-release tag with this name (can be: alpha|beta|pre|rc)"`
+	PreReleaseName      string `short:"p" long:"pre-release-name" description:"create a pre-release tag with this name (can be: alpha|beta|pre|rc|dev)"`
 	PreReleaseTimestamp string `short:"T" long:"pre-release-timestamp" description:"create a pre-release tag and append a timestamp (can be: datetime|epoch)"`
 }
 
@@ -55,10 +55,10 @@ func init() {
 
 func validateOpts() error {
 	switch opts.PreReleaseName {
-	case "", "alpha", "beta", "pre", "rc":
+	case "", "alpha", "beta", "pre", "rc", "dev":
 		// nothing -- valid values
 	default:
-		return fmt.Errorf("-p/--pre-release-name was %q; want (alpha|beta|pre|rc)", opts.PreReleaseName)
+		return fmt.Errorf("-p/--pre-release-name was %q; want (alpha|beta|pre|rc|dev)", opts.PreReleaseName)
 	}
 
 	switch opts.PreReleaseTimestamp {
