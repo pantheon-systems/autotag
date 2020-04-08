@@ -4,7 +4,7 @@ include scripts/make/common.mk
 include scripts/make/common-go.mk
 
 build::
-	go build -o $(APP)/$(APP)  $(APP)/*.go
+	CGO_ENABLED=0 go build -o $(APP)/$(APP)  $(APP)/*.go
 
 snapshot:
 	@goreleaser --rm-dist --snapshot --debug

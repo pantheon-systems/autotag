@@ -1,6 +1,7 @@
 project_name: autotag
 env:
   - GO111MODULE=on
+  - CGO_ENABLED=0
   - GOPROXY=https://proxy.golang.org
 builds:
   - binary: autotag
@@ -38,11 +39,11 @@ changelog:
   sort: asc
   filters:
     exclude:
-    - '^docs:'
-    - '^readme:'
-    - '^test:'
-    - Merge pull request
-    - Merge branch
+      - "^docs:"
+      - "^readme:"
+      - "^test:"
+      - Merge pull request
+      - Merge branch
 
 # GPG signing
 # TODO: consider implementing a "project signing key"
@@ -76,10 +77,9 @@ archives:
 #     description: "Automatically add version tags to a git repo based on commit messages."
 
 dockers:
-  -
-    dockerfile: Dockerfile
+  - dockerfile: Dockerfile
     image_templates:
-     - "quay.io/pantheon-public/autotag:{{ .Tag }}"                  # v1.0.0
-     - "quay.io/pantheon-public/autotag:v{{ .Major }}"               # v1
-     - "quay.io/pantheon-public/autotag:v{{ .Major }}.{{ .Minor }}"  # v1.0
-     - "quay.io/pantheon-public/autotag:latest"
+      - "quay.io/pantheon-public/autotag:{{ .Tag }}" # v1.0.0
+      - "quay.io/pantheon-public/autotag:v{{ .Major }}" # v1
+      - "quay.io/pantheon-public/autotag:v{{ .Major }}.{{ .Minor }}" # v1.0
+      - "quay.io/pantheon-public/autotag:latest"
