@@ -4,7 +4,7 @@ version: 2.1
 executors:
   go-build:
     docker:
-      - image: circleci/golang:1.12
+      - image: circleci/golang:1.14
 
 commands:
   save-go-mod-cache:

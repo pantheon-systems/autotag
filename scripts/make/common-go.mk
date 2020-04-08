@@ -27,7 +27,7 @@ ifneq (,$(wildcard go.mod)) # if there IS go.mod
   USE_MODULE = 1
   GO111MODULE=on
   export GO11MODULE
-  GOLANGCI_VERSION := v1.17.1
+  GOLANGCI_VERSION := v1.24.0
 else ifneq (,$(wildcard Gopkg.toml)) # if ther IS Gopkg.toml
   USE_DEP = 1
 else
