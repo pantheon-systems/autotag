@@ -51,7 +51,7 @@ jobs:
       - run: go get
       - run: make test-circle
       - run: make build
-      - run: make snapshot
+      - run: goreleaser check
       # persist
       - save-go-mod-cache
       - save-workspace
