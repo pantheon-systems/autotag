@@ -8,3 +8,5 @@ coverage*
 vendor/**
 !vendor/manifest
 dist/
+Attic
+.vscode/

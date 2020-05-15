@@ -18,6 +18,7 @@ type Options struct {
 	RepoPath            string `short:"r" long:"repo" description:"Path to the repo" default:"./" `
 	PreReleaseName      string `short:"p" long:"pre-release-name" description:"create a pre-release tag with this name (can be: alpha|beta|pre|rc|dev)"`
 	PreReleaseTimestamp string `short:"T" long:"pre-release-timestamp" description:"create a pre-release tag and append a timestamp (can be: datetime|epoch)"`
+	Scheme              string `short:"s" long:"scheme" description:"The commit message scheme to use (can be: autotag|conventional)" default:"autotag"`
 }
 
 var opts Options
@@ -68,6 +69,13 @@ func validateOpts() error {
 		return fmt.Errorf("-T/--pre-release-timestamp was %q; want (datetime|epoch)", opts.PreReleaseTimestamp)
 	}
 
+	switch opts.Scheme {
+	case "", "autotag", "conventional":
+		// nothing -- valid values
+	default:
+		return fmt.Errorf("-s/--scheme was %q; want (autotag|conventional)", opts.Scheme)
+	}
+
 	return nil
 }
 
@@ -82,6 +90,7 @@ func main() {
 		Branch:                    opts.Branch,
 		PreReleaseName:            opts.PreReleaseName,
 		PreReleaseTimestampLayout: timestampLayoutFromOpts(),
+		Scheme:                    opts.Scheme,
 	})
 
 	if err != nil {
