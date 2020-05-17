@@ -84,24 +84,7 @@ func makeTag(r *git.Repository, tag string) {
 	}
 }
 
-// adds a #major comit to the repo
-func newRepoMajor(t *testing.T) GitRepo {
-	tr := createTestRepo(t)
-
-	repo, err := git.OpenRepository(tr)
-	checkFatal(t, err)
-	seedTestRepo(t, repo)
-	updateReadme(t, repo, "#major change")
-
-	r, err := NewRepo(GitRepoConfig{RepoPath: repo.Path, Branch: "master"})
-	if err != nil {
-		t.Fatal("Error creating repo", err)
-	}
-
-	return *r
-}
-
-func seedTestRepo(t *testing.T, repo *git.Repository) {
+func seedTestRepo(t *testing.T, tag string, repo *git.Repository) {
 	f := repoRoot(repo) + "/README"
 	err := exec.Command("touch", f).Run()
 	if err != nil {
@@ -110,12 +93,7 @@ func seedTestRepo(t *testing.T, repo *git.Repository) {
 	}
 
 	makeCommit(repo, "this is a commit")
-	makeTag(repo, "v1.0.1")
-}
-
-func majorTag(t *testing.T, repo *git.Repository) {
-	updateReadme(t, repo, "Release version 2 #major")
-	makeTag(repo, "v2.0.0")
+	makeTag(repo, tag)
 }
 
 func updateReadme(t *testing.T, repo *git.Repository, content string) {
@@ -127,7 +105,6 @@ func updateReadme(t *testing.T, repo *git.Repository, content string) {
 }
 
 func repoRoot(r *git.Repository) string {
-
 	checkPath := r.Path
 	if filepath.Base(r.Path) == ".git" {
 		checkPath = r.Path + "/../"

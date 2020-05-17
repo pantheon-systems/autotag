@@ -42,10 +42,16 @@ jobs:
       - run: |
           git config --global user.email circleci
           git config --global user.name circleci
+      - run:
+          name: install goreleaser binary
+          command: |
+            curl -sL https://install.goreleaser.com/github.com/goreleaser/goreleaser.sh | bash
+            sudo mv ./bin/goreleaser /bin
       - run: make deps-coverage
       - run: go get
       - run: make test-circle
       - run: make build
+      - run: goreleaser check
       # persist
       - save-go-mod-cache
       - save-workspace
