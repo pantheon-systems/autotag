@@ -9,6 +9,13 @@ import (
 	"github.com/gogits/git-module"
 )
 
+func init() {
+	// fixed point-in-time time.Now() for testing
+	timeNow = func() time.Time {
+		return time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC)
+	}
+}
+
 // testRepoSetup provides a method for setting up a new git repo in a temporary directory
 type testRepoSetup struct {
 	// (optional) versioning scheme to use, eg: "" or "autotag", "conventional". If not set, defaults to "" (autotag)
@@ -28,6 +35,9 @@ type testRepoSetup struct {
 
 	// (optional) the prerelease timestamp format to use, eg: "epoch". If not set, no prerelease timestamp will be used
 	preReleaseTimestampLayout string
+
+	// (optional) build metadata to append to the version
+	buildMetadata string
 
 	// (optional) commit message to use for the next, untagged commit. Settings this allows for testing the
 	// commit message parsing logic. eg: "#major this is a major commit"
@@ -69,13 +79,74 @@ func newTestRepo(t *testing.T, setup testRepoSetup) GitRepo {
 		Branch:                    branch,
 		PreReleaseName:            setup.preReleaseName,
 		PreReleaseTimestampLayout: setup.preReleaseTimestampLayout,
+		BuildMetadata:             setup.buildMetadata,
 		Scheme:                    setup.scheme,
 	})
+
 	if err != nil {
-		t.Fatal("Error creating repo", err)
+		t.Fatal("Error creating repo: ", err)
 	}
 
 	return *r
+}
+
+func TestValidateConfig(t *testing.T) {
+	tests := []struct {
+		name      string
+		cfg       GitRepoConfig
+		shouldErr bool
+	}{
+		{
+			name:      "missing branch",
+			cfg:       GitRepoConfig{},
+			shouldErr: true,
+		},
+		{
+			name: "invalid build metadata",
+			cfg: GitRepoConfig{
+				Branch:        "master",
+				BuildMetadata: "foo,bar,^",
+			},
+			shouldErr: true,
+		},
+		{
+			name: "invalid pre-release-name",
+			cfg: GitRepoConfig{
+				Branch:         "master",
+				PreReleaseName: "foo",
+			},
+			shouldErr: true,
+		},
+		{
+			name: "invalid pre-release-timestamp",
+			cfg: GitRepoConfig{
+				Branch:                    "master",
+				PreReleaseTimestampLayout: "foo",
+			},
+			shouldErr: true,
+		},
+		{
+			name: "valid config with all options used",
+			cfg: GitRepoConfig{
+				Branch:                    "master",
+				PreReleaseName:            "dev",
+				PreReleaseTimestampLayout: "epoch",
+				BuildMetadata:             "g12345678",
+			},
+			shouldErr: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validateConfig(tc.cfg)
+			if tc.shouldErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
 }
 
 func TestMajor(t *testing.T) {
@@ -128,258 +199,265 @@ func TestPatch(t *testing.T) {
 	}
 }
 
+func TestMissingInitialTag(t *testing.T) {
+	tr := createTestRepo(t)
+	repo, err := git.OpenRepository(tr)
+	checkFatal(t, err)
+	defer cleanupTestRepo(t, repo)
+
+	updateReadme(t, repo, "a commit before any usable tag has been created")
+
+	_, err = NewRepo(GitRepoConfig{
+		RepoPath: repo.Path,
+		Branch:   "master",
+	})
+	assert.Error(t, err)
+}
+
 func TestAutoTag(t *testing.T) {
-	r := newTestRepo(t, testRepoSetup{
-		initialTag: "v1.0.1",
-	})
-	defer cleanupTestRepo(t, r.repo)
-
-	err := r.AutoTag()
-	if err != nil {
-		t.Fatal("AutoTag failed ", err)
-	}
-
-	tags, err := r.repo.GetTags()
-	checkFatal(t, err)
-	assert.Contains(t, tags, "v1.0.2")
-}
-
-func TestAutoTagCommits(t *testing.T) {
-	r := newTestRepo(t, testRepoSetup{
-		initialTag: "v1.0.1",
-		nextCommit: "#major change",
-	})
-	defer cleanupTestRepo(t, r.repo)
-
-	err := r.AutoTag()
-	if err != nil {
-		t.Fatal("AutoTag failed ", err)
-	}
-
-	tags, err := r.repo.GetTags()
-	checkFatal(t, err)
-	assert.Contains(t, tags, "v2.0.0")
-}
-
-func TestAutoTagWithPreReleasedTag(t *testing.T) {
-	r := newTestRepo(t, testRepoSetup{
-		initialTag: "v1.0.1",
-		extraTags:  []string{"v1.0.2-pre"},
-	})
-	defer cleanupTestRepo(t, r.repo)
-
-	err := r.AutoTag()
-	if err != nil {
-		t.Fatal("AutoTag failed ", err)
-	}
-
-	tags, err := r.repo.GetTags()
-	checkFatal(t, err)
-
-	assert.Contains(t, tags, "v1.0.2-pre")
-	assert.Contains(t, tags, "v1.0.2")
-}
-
-func TestAutoTagWithPreReleaseName(t *testing.T) {
-	r := newTestRepo(t, testRepoSetup{
-		initialTag:     "v1.0.1",
-		preReleaseName: "test",
-	})
-	defer cleanupTestRepo(t, r.repo)
-
-	err := r.AutoTag()
-	if err != nil {
-		t.Fatal("AutoTag failed ", err)
-	}
-
-	tags, err := r.repo.GetTags()
-	checkFatal(t, err)
-
-	assert.Contains(t, tags, "v1.0.2-test")
-}
-
-func TestAutoTagWithPreReleaseTimestampLayout_Epoch(t *testing.T) {
-	r := newTestRepo(t, testRepoSetup{
-		initialTag:                "v1.0.1",
-		preReleaseTimestampLayout: "epoch",
-	})
-	defer cleanupTestRepo(t, r.repo)
-
-	err := r.AutoTag()
-	timeNow := time.Now().UTC()
-
-	if err != nil {
-		t.Fatal("AutoTag failed ", err)
-	}
-
-	tags, err := r.repo.GetTags()
-	checkFatal(t, err)
-
-	expect := fmt.Sprintf("v1.0.2-%d", timeNow.Unix())
-	assert.Contains(t, tags, expect)
-}
-
-const testDatetimeLayout = "20060102150405"
-
-func TestAutoTagWithPreReleaseTimestampLayout_Datetime(t *testing.T) {
-	r := newTestRepo(t, testRepoSetup{
-		initialTag:                "v1.0.1",
-		preReleaseTimestampLayout: testDatetimeLayout,
-	})
-	defer cleanupTestRepo(t, r.repo)
-
-	err := r.AutoTag()
-	timeNow := time.Now().UTC()
-
-	if err != nil {
-		t.Fatal("AutoTag failed ", err)
-	}
-
-	tags, err := r.repo.GetTags()
-	checkFatal(t, err)
-
-	expect := fmt.Sprintf("v1.0.2-%s", timeNow.Format(testDatetimeLayout))
-	assert.Contains(t, tags, expect)
-}
-
-func TestAutoTagWithPreReleaseNameAndPreReleaseTimestampLayout(t *testing.T) {
-	r := newTestRepo(t, testRepoSetup{
-		initialTag:                "v1.0.1",
-		preReleaseName:            "test",
-		preReleaseTimestampLayout: "epoch",
-	})
-	defer cleanupTestRepo(t, r.repo)
-
-	err := r.AutoTag()
-	timeNow := time.Now().UTC()
-
-	if err != nil {
-		t.Fatal("AutoTag failed ", err)
-	}
-
-	tags, err := r.repo.GetTags()
-	checkFatal(t, err)
-
-	expect := fmt.Sprintf("v1.0.2-test.%d", timeNow.Unix())
-	assert.Contains(t, tags, expect)
-}
-
-func TestParseCommit(t *testing.T) {
 	tests := []struct {
 		name        string
-		scheme      string
-		nextCommit  string
-		initialTag  string
+		setup       testRepoSetup
+		shouldErr   bool
 		expectedTag string
 	}{
 		// tests for autotag (default) scheme
 		{
-			name:        "autotag scheme, [major] bump",
-			scheme:      "autotag",
-			nextCommit:  "[major] this is a big release\n\nfoo bar baz\n",
-			initialTag:  "v1.0.0",
+			name: "autotag scheme, [major] bump",
+			setup: testRepoSetup{
+				scheme:     "autotag",
+				nextCommit: "[major] this is a big release\n\nfoo bar baz\n",
+				initialTag: "v1.0.0",
+			},
 			expectedTag: "v2.0.0",
 		},
 		{
-			name:        "autotag scheme, [minor] bump",
-			scheme:      "autotag",
-			nextCommit:  "[minor] this is a smaller release\n\nfoo bar baz\n",
-			initialTag:  "v1.0.0",
+			name: "autotag scheme, [minor] bump",
+			setup: testRepoSetup{
+				scheme:     "autotag",
+				nextCommit: "[minor] this is a smaller release\n\nfoo bar baz\n",
+				initialTag: "v1.0.0",
+			},
 			expectedTag: "v1.1.0",
 		},
 		{
-			name:        "autotag scheme, patch bump",
-			scheme:      "autotag",
-			nextCommit:  "this is just a basic change\n\nfoo bar baz\n",
-			initialTag:  "v1.0.0",
+			name: "autotag scheme, patch bump",
+			setup: testRepoSetup{
+				scheme:     "autotag",
+				nextCommit: "this is just a basic change\n\nfoo bar baz\n",
+				initialTag: "v1.0.0",
+			},
 			expectedTag: "v1.0.1",
 		},
 		{
-			name:        "autotag scheme, #major bump",
-			scheme:      "autotag",
-			nextCommit:  "#major this is a big release\n\nfoo bar baz\n",
-			initialTag:  "v1.0.0",
+			name: "autotag scheme, #major bump",
+			setup: testRepoSetup{
+				scheme:     "autotag",
+				nextCommit: "#major this is a big release\n\nfoo bar baz\n",
+				initialTag: "v1.0.0",
+			},
 			expectedTag: "v2.0.0",
 		},
 		{
-			name:        "autotag scheme, #minor bump",
-			scheme:      "autotag",
-			nextCommit:  "#minor this is a smaller release\n\nfoo bar baz\n",
-			initialTag:  "v1.0.0",
+			name: "autotag scheme, #minor bump",
+			setup: testRepoSetup{
+				scheme:     "autotag",
+				nextCommit: "#minor this is a smaller release\n\nfoo bar baz\n",
+				initialTag: "v1.0.0",
+			},
 			expectedTag: "v1.1.0",
+		},
+		{
+			name: "pre-release-name with patch bump",
+			setup: testRepoSetup{
+				scheme:         "autotag",
+				nextCommit:     "#patch bump",
+				initialTag:     "v1.0.0",
+				preReleaseName: "dev",
+			},
+			expectedTag: "v1.0.1-dev",
+		},
+		{
+			name: "epoch pre-release-timestamp",
+			setup: testRepoSetup{
+				scheme:                    "autotag",
+				nextCommit:                "#patch bump",
+				initialTag:                "v1.0.0",
+				preReleaseTimestampLayout: "epoch",
+			},
+			expectedTag: fmt.Sprintf("v1.0.1-%d", timeNow().UTC().Unix()),
+		},
+		{
+			name: "datetime pre-release-timestamp",
+			setup: testRepoSetup{
+				scheme:                    "autotag",
+				nextCommit:                "#patch bump",
+				initialTag:                "v1.0.0",
+				preReleaseTimestampLayout: "datetime",
+			},
+			expectedTag: fmt.Sprintf("v1.0.1-%s", timeNow().Format(datetimeTsLayout)),
+		},
+		{
+			name: "epoch pre-release-timestamp and pre-release-name",
+			setup: testRepoSetup{
+				scheme:                    "autotag",
+				nextCommit:                "#patch bump",
+				initialTag:                "v1.0.0",
+				preReleaseName:            "dev",
+				preReleaseTimestampLayout: "epoch",
+			},
+			expectedTag: fmt.Sprintf("v1.0.1-dev.%d", timeNow().UTC().Unix()),
+		},
+		{
+			name: "ignore non-conforming tags",
+			setup: testRepoSetup{
+				scheme:     "autotag",
+				nextCommit: "#patch bump",
+				initialTag: "v1.0.0",
+				extraTags:  []string{"foo", ""},
+			},
+			expectedTag: "v1.0.1",
+		},
+		{
+			name: "test with pre-relase tag",
+			setup: testRepoSetup{
+				scheme:     "autotag",
+				nextCommit: "#patch bump",
+				initialTag: "v1.0.0",
+				extraTags:  []string{"v1.0.1-pre"},
+			},
+			expectedTag: "v1.0.1",
+		},
+		{
+			name: "build metadata",
+			setup: testRepoSetup{
+				scheme:        "autotag",
+				nextCommit:    "#patch bump",
+				initialTag:    "v1.0.0",
+				buildMetadata: "g012345678",
+			},
+			expectedTag: "v1.0.1+g012345678",
 		},
 		// tests for conventional commits scheme. Based on:
 		// https://www.conventionalcommits.org/en/v1.0.0/#summary
 		// and
 		// https://www.conventionalcommits.org/en/v1.0.0/#examples
 		{
-			name:        "conventional commits, minor bump without scope",
-			scheme:      "conventional",
-			nextCommit:  "feat: allow provided config object to extend other configs",
-			initialTag:  "v1.0.0",
+			name: "conventional commits, minor bump without scope",
+			setup: testRepoSetup{
+				scheme:     "conventional",
+				nextCommit: "feat: allow provided config object to extend other configs",
+				initialTag: "v1.0.0",
+			},
 			expectedTag: "v1.1.0",
 		},
 		{
-			name:        "conventional commits, minor bump with scope",
-			scheme:      "conventional",
-			nextCommit:  "feat(lang): add polish language",
-			initialTag:  "v1.0.0",
+			name: "conventional commits, minor bump with scope",
+			setup: testRepoSetup{
+				scheme:     "conventional",
+				nextCommit: "feat(lang): add polish language",
+				initialTag: "v1.0.0",
+			},
 			expectedTag: "v1.1.0",
 		},
 		{
-			name:        "conventional commits, breaking change via ! appended to type",
-			scheme:      "conventional",
-			nextCommit:  "refactor!: drop support for Node 6",
-			initialTag:  "v1.0.0",
+			name: "conventional commits, breaking change via ! appended to type",
+			setup: testRepoSetup{
+				scheme:     "conventional",
+				nextCommit: "refactor!: drop support for Node 6",
+				initialTag: "v1.0.0",
+			},
 			expectedTag: "v2.0.0",
 		},
 		{
-			name:        "conventional commits, breaking change via ! appended to type/scope",
-			scheme:      "conventional",
-			nextCommit:  "refactor(runtime)!: drop support for Node 6",
-			initialTag:  "v1.0.0",
+			name: "conventional commits, breaking change via ! appended to type/scope",
+			setup: testRepoSetup{
+				scheme:     "conventional",
+				nextCommit: "refactor(runtime)!: drop support for Node 6",
+				initialTag: "v1.0.0",
+			},
 			expectedTag: "v2.0.0",
 		},
 		{
-			name:        "conventional commits, breaking change via footer",
-			scheme:      "conventional",
-			nextCommit:  "feat: allow provided config object to extend other configs\n\nbody before footer\n\nBREAKING CHANGE: non-backwards compatible",
-			initialTag:  "v1.0.0",
+			name: "conventional commits, breaking change via footer",
+			setup: testRepoSetup{
+				scheme:     "conventional",
+				nextCommit: "feat: allow provided config object to extend other configs\n\nbody before footer\n\nBREAKING CHANGE: non-backwards compatible",
+				initialTag: "v1.0.0",
+			},
 			expectedTag: "v2.0.0",
 		},
 		{
-			name:        "conventional commits, patch/minor bump",
-			scheme:      "conventional",
-			nextCommit:  "fix: correct minor typos in code",
-			initialTag:  "v1.0.0",
+			name: "conventional commits, patch/minor bump",
+			setup: testRepoSetup{
+				scheme:     "conventional",
+				nextCommit: "fix: correct minor typos in code",
+				initialTag: "v1.0.0",
+			},
 			expectedTag: "v1.0.1",
 		},
 		{
-			name:        "conventional commits, non-conforming fallback to patch bump",
-			scheme:      "conventional",
-			nextCommit:  "not a conventional commit message",
-			initialTag:  "v1.0.0",
+			name: "conventional commits, non-conforming fallback to patch bump",
+			setup: testRepoSetup{
+				scheme:     "conventional",
+				nextCommit: "not a conventional commit message",
+				initialTag: "v1.0.0",
+			},
 			expectedTag: "v1.0.1",
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			r := newTestRepo(t, testRepoSetup{
-				scheme:     tc.scheme,
-				initialTag: tc.initialTag,
-				nextCommit: tc.nextCommit,
-			})
+			r := newTestRepo(t, tc.setup)
 			defer cleanupTestRepo(t, r.repo)
 
 			err := r.AutoTag()
-			if err != nil {
-				t.Fatal("AutoTag failed ", err)
+			if tc.shouldErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
 			}
 
 			tags, err := r.repo.GetTags()
 			checkFatal(t, err)
 			assert.Contains(t, tags, tc.expectedTag)
+		})
+	}
+}
+
+func TestValidateSemVerBuildMetadata(t *testing.T) {
+	tests := []struct {
+		name  string
+		meta  string
+		valid bool
+	}{
+		{
+			name:  "valid single-part metadata",
+			meta:  "g123456",
+			valid: true,
+		},
+		{
+			name:  "valid multi-part metadata",
+			meta:  "g123456.20200512",
+			valid: true,
+		},
+		{
+			name:  "invalid characters",
+			meta:  "g123456,foo_bar",
+			valid: false,
+		},
+		{
+			name:  "empty string",
+			meta:  "",
+			valid: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			valid := validateSemVerBuildMetadata(tc.meta)
+			assert.Equal(t, tc.valid, valid)
 		})
 	}
 }

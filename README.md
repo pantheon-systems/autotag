@@ -7,6 +7,22 @@ AutoTag
 
 Automatically increment version tags to a git repo based on commit messages.
 
+* [AutoTag](#autotag)
+  * [Dependencies](#dependencies)
+  * [Installing](#installing)
+    * [Pre-built binaries](#pre-built-binaries)
+    * [Docker images](#docker-images)
+    * [One-liner](#one-liner)
+  * [Usage](#usage)
+    * [Scheme: Autotag (default)](#scheme-autotag-default)
+    * [Scheme: Conventional Commits](#scheme-conventional-commits)
+    * [Pre-Release Tags](#pre-release-tags)
+    * [Build metadata](#build-metadata)
+  * [Examples](#examples)
+    * [Goreleaser](#goreleaser)
+  * [Build from Source](#build-from-source)
+  * [Release information](#release-information)
+
 Dependencies
 ------------
 
@@ -23,14 +39,14 @@ Installing
 ### Pre-built binaries
 
 | OS    | Arch  | binary              |
-| ----- | ----- | ------------------- |
+|-------|-------|---------------------|
 | macOS | amd64 | [autotag][releases] |
 | Linux | amd64 | [autotag][releases] |
 
 ### Docker images
 
 | Arch  | Images                                                           |
-| ----- | ---------------------------------------------------------------- |
+|-------|------------------------------------------------------------------|
 | amd64 | `quay.io/pantheon-public/autotag:latest`, `vX.Y.Z`, `vX.Y`, `vX` |
 
 [releases]: https://github.com/pantheon-systems/autotag/releases/latest
@@ -99,7 +115,8 @@ If no keywords are specified a **Patch** bump is applied.
 
 ### Scheme: Conventional Commits
 
-Specify the [Conventional Commits](TODO) v1.0.0 scheme by passing `--scheme=conventional` to `autotag`.
+Specify the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/#examples) v1.0.0
+scheme by passing `--scheme=conventional` to `autotag`.
 
 Conventional Commits implements SemVer style versioning `vMajor.Minor.Patch` similar to the
 autotag scheme, but with a different commit message format.
@@ -139,6 +156,17 @@ If no keywords are specified a **Patch** bump is applied.
 * Use `-T/--pre-release-timestmap=` to append **timestamp** to the version. Allowed timetstamp
   formats are `datetime` (YYYYMMDDHHMMSS) or `epoch` (UNIX epoch timestamp in seconds).
 
+### Build metadata
+
+Optional SemVer build metadata can be appended to the version string after a `+` character using the `-m/--build-metadata` flag. eg: `v1.2.3+foo`
+
+Build metadata is subject to the rules outlined in the [Semver](https://semver.org/#spec-item-10)
+spec.
+
+A common uses might be the current git reference: `git rev-parse --short HEAD`.
+
+Multiple metadata items should be seperated by a `.`, eg: `foo.bar`
+
 Examples
 --------
 
@@ -162,6 +190,18 @@ $ autotag -p pre -T epoch
 
 $ autotag -p rc -T datetime
 3.2.1-rc.20170706054528
+
+$ autotag -m g$(git rev-parse --short HEAD)
+3.2.1+ge92b825
+
+$ autotag -p dev -m g$(git rev-parse --short HEAD)
+3.2.1-dev+ge92b825
+
+$ autotag -m $(date +%Y%M%d)
+3.2.1-dev+20200518
+
+$ autotag  -m g$(git rev-parse --short HEAD).$(date +%s)
+3.2.1+g11492a8.1589860151
 ```
 
 For additional help information use the `-h/--help` flag:
@@ -223,10 +263,12 @@ git clone git@github.com:pantheon-systems/autotag.git
 
 cd autotag
 
+make test
 make build
 ```
 
 Release information
 -------------------
 
-Autotag itself uses `autotag` to increment releases. The default [autotag](#scheme-autotag-default) scheme is used for version selection.
+Autotag itself uses `autotag` to increment releases. The default [autotag](#scheme-autotag-default)
+scheme is used for version selection.
