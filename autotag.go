@@ -17,6 +17,11 @@ import (
 	"github.com/hashicorp/go-version"
 )
 
+const (
+	// datetimeTsLayout is the YYYYMMDDHHMMSS time format
+	datetimeTsLayout = "20060102150405"
+)
+
 var (
 	// autotag commit message scheme:
 	majorRex = regexp.MustCompile(`(?i)\[major\]|\#major`)
@@ -27,9 +32,15 @@ var (
 	// https://regex101.com/r/XciTmT/2
 	conventionalCommitRex = regexp.MustCompile(`^\s*(?P<type>\w+)(?P<scope>(?:\([^()\r\n]*\)|\()?(?P<breaking>!)?)(?P<subject>:.*)?`)
 
-	// versionRex matches semver style versions, eg: `v1.0.0`
+	// versionRex matches semVer style versions, eg: `v1.0.0`
 	versionRex = regexp.MustCompile(`^v([\d]+\.?.*)`)
+
+	// semVerBuildMetaRex validates SemVer build metadata strings according to
+	// https://semver.org/#spec-item-10
+	semVerBuildMetaRex = regexp.MustCompile(`^[0-9A-Za-z-\.]+$`)
 )
+
+var timeNow = time.Now
 
 // GitRepoConfig is the configuration needed to create a new *GitRepo.
 type GitRepoConfig struct {
@@ -70,6 +81,15 @@ type GitRepoConfig struct {
 	// 		v1.2.3-pre.1499308568
 	PreReleaseTimestampLayout string
 
+	// BuildMetadata is an optional string appended by a plus sign and a series of dot separated
+	// identifiers immediately following the patch or pre-release version. Identifiers MUST comprise
+	// only ASCII alphanumerics and hyphen [0-9A-Za-z-]. Identifiers MUST NOT be empty. Build metadata
+	// MUST be ignored when determining version precedence. Thus two versions that differ only in the
+	// build metadata, have the same precedence. Examples: 1.0.0-alpha+001, 1.0.0+20130313144700,
+	// 1.0.0-beta+exp.sha.5114f85
+	// https://semver.org/#spec-item-10
+	BuildMetadata string
+
 	// Scheme is the versioning scheme to use when determining the version of the next
 	// tag. If not specified the default "autotag" is used.
 	//
@@ -98,14 +118,19 @@ type GitRepo struct {
 
 	preReleaseName            string
 	preReleaseTimestampLayout string
+	buildMetadata             string
 
 	scheme string
 }
 
 // NewRepo is a constructor for a repo object, parsing the tags that exist
 func NewRepo(cfg GitRepoConfig) (*GitRepo, error) {
-	if cfg.Branch == "" {
-		return nil, fmt.Errorf("must specify a branch")
+	if err := validateConfig(cfg); err != nil {
+		return nil, err
+	}
+
+	if cfg.PreReleaseTimestampLayout == "datetime" {
+		cfg.PreReleaseTimestampLayout = datetimeTsLayout
 	}
 
 	gitDirPath, err := generateGitDirPath(cfg.RepoPath)
@@ -125,6 +150,7 @@ func NewRepo(cfg GitRepoConfig) (*GitRepo, error) {
 		branch:                    cfg.Branch,
 		preReleaseName:            cfg.PreReleaseName,
 		preReleaseTimestampLayout: cfg.PreReleaseTimestampLayout,
+		buildMetadata:             cfg.BuildMetadata,
 		scheme:                    cfg.Scheme,
 	}
 
@@ -138,6 +164,32 @@ func NewRepo(cfg GitRepoConfig) (*GitRepo, error) {
 	}
 
 	return r, nil
+}
+
+func validateConfig(cfg GitRepoConfig) error {
+	if cfg.Branch == "" {
+		return fmt.Errorf("must specify a branch")
+	}
+
+	if cfg.BuildMetadata != "" && !validateSemVerBuildMetadata(cfg.BuildMetadata) {
+		return fmt.Errorf("'%s' is not valid SemVer build metadata", cfg.BuildMetadata)
+	}
+
+	switch cfg.PreReleaseName {
+	case "", "alpha", "beta", "pre", "rc", "dev":
+		// nothing -- valid values
+	default:
+		return fmt.Errorf("pre-release-name '%s' is not valid; must be (alpha|beta|pre|rc|dev)", cfg.PreReleaseName)
+	}
+
+	switch cfg.PreReleaseTimestampLayout {
+	case "", "datetime", "epoch":
+		// nothing -- valid values
+	default:
+		return fmt.Errorf("pre-release-timestamp '%s' is not valid; must be (datetime|epoch)", cfg.PreReleaseTimestampLayout)
+	}
+
+	return nil
 }
 
 func generateGitDirPath(repoPath string) (string, error) {
@@ -229,7 +281,7 @@ func parseVersion(v string) (*version.Version, error) {
 	return nVersion, nil
 }
 
-// LatestVersion Reports the Lattest version of the given repo
+// LatestVersion Reports the Latest version of the given repo
 // TODO:(jnelson) this could be more intelligent, looking for a nil new and reporting the latest version found if we refactor autobump at some point Mon Sep 14 13:05:49 2015
 func (r *GitRepo) LatestVersion() string {
 	return r.newVersion.String()
@@ -273,7 +325,7 @@ func preReleaseVersion(v *version.Version, name, tsLayout string) (*version.Vers
 
 		var (
 			timestamp   string
-			currentTime = time.Now().UTC()
+			currentTime = timeNow().UTC()
 		)
 
 		if tsLayout == "epoch" {
@@ -335,9 +387,16 @@ func (r *GitRepo) calcVersion() error {
 		}
 	}
 
-	// if we want this to be a PreRelease tag, we need to enhance the format a bit
+	// append pre-release-name and/or pre-release-timestamp to the version
 	if len(r.preReleaseName) > 0 || len(r.preReleaseTimestampLayout) > 0 {
 		if r.newVersion, err = preReleaseVersion(r.newVersion, r.preReleaseName, r.preReleaseTimestampLayout); err != nil {
+			return err
+		}
+	}
+
+	// append optional build metadata
+	if r.buildMetadata != "" {
+		if r.newVersion, err = version.NewVersion(fmt.Sprintf("%s+%s", r.newVersion.String(), r.buildMetadata)); err != nil {
 			return err
 		}
 	}
@@ -460,4 +519,17 @@ func findNamedMatches(regex *regexp.Regexp, str string) map[string]string {
 		results[regex.SubexpNames()[i]] = name
 	}
 	return results
+}
+
+// validateSemVerBuildMetadata validates SemVer build metadata strings according to
+// https://semver.org/#spec-item-10
+func validateSemVerBuildMetadata(meta string) bool {
+	metas := strings.Split(meta, ".")
+
+	for _, s := range metas {
+		if !semVerBuildMetaRex.MatchString(s) {
+			return false
+		}
+	}
+	return true
 }
