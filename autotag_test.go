@@ -39,6 +39,9 @@ type testRepoSetup struct {
 	// (optional) build metadata to append to the version
 	buildMetadata string
 
+	// (optional) prepend literal 'v' to version tags (default: true)
+	disablePrefix bool
+
 	// (optional) commit message to use for the next, untagged commit. Settings this allows for testing the
 	// commit message parsing logic. eg: "#major this is a major commit"
 	nextCommit string
@@ -61,6 +64,9 @@ func newTestRepo(t *testing.T, setup testRepoSetup) GitRepo {
 	tag := setup.initialTag
 	if setup.initialTag == "" {
 		tag = "v0.0.1"
+		if setup.disablePrefix {
+			tag = "0.0.1"
+		}
 	}
 	seedTestRepo(t, tag, repo)
 
@@ -81,6 +87,7 @@ func newTestRepo(t *testing.T, setup testRepoSetup) GitRepo {
 		PreReleaseTimestampLayout: setup.preReleaseTimestampLayout,
 		BuildMetadata:             setup.buildMetadata,
 		Scheme:                    setup.scheme,
+		Prefix:                    !setup.disablePrefix,
 	})
 
 	if err != nil {
@@ -132,6 +139,7 @@ func TestValidateConfig(t *testing.T) {
 				PreReleaseName:            "dev",
 				PreReleaseTimestampLayout: "epoch",
 				BuildMetadata:             "g12345678",
+				Prefix:                    true,
 			},
 			shouldErr: false,
 		},
@@ -337,6 +345,16 @@ func TestAutoTag(t *testing.T) {
 				buildMetadata: "g012345678",
 			},
 			expectedTag: "v1.0.1+g012345678",
+		},
+		{
+			name: "autotag scheme, [major] bump without prefix",
+			setup: testRepoSetup{
+				scheme:        "autotag",
+				nextCommit:    "[major] this is a big release\n\nfoo bar baz\n",
+				initialTag:    "1.0.0",
+				disablePrefix: true,
+			},
+			expectedTag: "2.0.0",
 		},
 		// tests for conventional commits scheme. Based on:
 		// https://www.conventionalcommits.org/en/v1.0.0/#summary
