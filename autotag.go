@@ -33,7 +33,7 @@ var (
 	conventionalCommitRex = regexp.MustCompile(`^\s*(?P<type>\w+)(?P<scope>(?:\([^()\r\n]*\)|\()?(?P<breaking>!)?)(?P<subject>:.*)?`)
 
 	// versionRex matches semVer style versions, eg: `v1.0.0`
-	versionRex = regexp.MustCompile(`^v([\d]+\.?.*)`)
+	versionRex = regexp.MustCompile(`^v?([\d]+\.?.*)`)
 
 	// semVerBuildMetaRex validates SemVer build metadata strings according to
 	// https://semver.org/#spec-item-10
@@ -104,6 +104,9 @@ type GitRepoConfig struct {
 	//   * "conventional" implements the Conventional Commits v1.0.0 scheme.
 	//     * https://www.conventionalcommits.org/en/v1.0.0/#summary w
 	Scheme string
+
+	// Prefix prepends literal 'v' to the tag, eg: v1.0.0. Enabled by default
+	Prefix bool
 }
 
 // GitRepo represents a repository we want to run actions against
@@ -121,6 +124,8 @@ type GitRepo struct {
 	buildMetadata             string
 
 	scheme string
+
+	prefix bool
 }
 
 // NewRepo is a constructor for a repo object, parsing the tags that exist
@@ -152,6 +157,7 @@ func NewRepo(cfg GitRepoConfig) (*GitRepo, error) {
 		preReleaseTimestampLayout: cfg.PreReleaseTimestampLayout,
 		buildMetadata:             cfg.BuildMetadata,
 		scheme:                    cfg.Scheme,
+		prefix:                    cfg.Prefix,
 	}
 
 	err = r.parseTags()
@@ -412,6 +418,9 @@ func (r *GitRepo) AutoTag() error {
 func (r *GitRepo) tagNewVersion() error {
 	// TODO:(jnelson) These should be configurable? Mon Sep 14 12:02:52 2015
 	tagName := fmt.Sprintf("v%s", r.newVersion.String())
+	if !r.prefix {
+		tagName = r.newVersion.String()
+	}
 
 	log.Println("Writing Tag", tagName)
 	err := r.repo.CreateTag(tagName, r.branchID)
