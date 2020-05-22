@@ -48,7 +48,6 @@ func main() {
 		Scheme:                    opts.Scheme,
 		Prefix:                    !opts.NoVersionPrefix,
 	})
-	log.Println("FUCK1")
 
 	if err != nil {
 		fmt.Println("Error initializing: ", err)
