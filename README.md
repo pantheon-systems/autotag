@@ -20,6 +20,8 @@ Automatically increment version tags to a git repo based on commit messages.
     * [Build metadata](#build-metadata)
   * [Examples](#examples)
     * [Goreleaser](#goreleaser)
+  * [Troubleshooting](#troubleshooting)
+    * [error getting head commit: object does not exist [id: refs/heads/master, rel_path: ]](#error-getting-head-commit-object-does-not-exist-id-refsheadsmaster-rel_path-)
   * [Build from Source](#build-from-source)
   * [Release information](#release-information)
 
@@ -253,6 +255,30 @@ workflows:
             branches:
               only:
                 - master
+```
+
+Troubleshooting
+---------------
+
+### error getting head commit: object does not exist [id: refs/heads/master, rel_path: ]
+
+```
+error getting head commit: object does not exist [id: refs/heads/master, rel_path: ]
+```
+
+You may run into this error on certain CI platforms such as Github Actions or Azure DevOps
+Pipelines. These platforms tend to make shallow clones of the git repo leaving out important data
+that `autotag` expects to find. This can be solved by adding the following commands prior to
+running `autotag`:
+
+```sh
+# fetch all tags and history:
+git fetch --tags --unshallow --prune
+
+if [ $(git rev-parse --abbrev-ref HEAD) != "master" ]; then
+  # ensure a local 'master' branch exists at 'refs/heads/master'
+  git branch --track master origin/master
+fi
 ```
 
 Build from Source
