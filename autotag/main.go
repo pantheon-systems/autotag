@@ -16,7 +16,7 @@ type Options struct {
 	Verbose             bool   `short:"v" description:"Enable verbose logging"`
 	Branch              string `short:"b" long:"branch" description:"Git branch to scan" default:"master" `
 	RepoPath            string `short:"r" long:"repo" description:"Path to the repo" default:"./" `
-	PreReleaseName      string `short:"p" long:"pre-release-name" description:"create a pre-release tag with this name (can be: alpha|beta|pre|rc|dev)"`
+	PreReleaseName      string `short:"p" long:"pre-release-name" description:"create a pre-release tag"`
 	PreReleaseTimestamp string `short:"T" long:"pre-release-timestamp" description:"create a pre-release tag and append a timestamp (can be: datetime|epoch)"`
 	BuildMetadata       string `short:"m" long:"build-metadata" description:"optional SemVer build metadata to append to the version with '+' character"`
 	Scheme              string `short:"s" long:"scheme" description:"The commit message scheme to use (can be: autotag|conventional)" default:"autotag"`

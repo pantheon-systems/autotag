@@ -1,5 +1,4 @@
-AutoTag
-=======
+# AutoTag
 
 [![Circle CI](https://circleci.com/gh/pantheon-systems/autotag.svg?style=shield&circle-token=ef9a68c180d0d470c594d39caf9e2a86fc529935)](https://circleci.com/gh/pantheon-systems/autotag)
 [![Coverage Status](https://coveralls.io/repos/github/pantheon-systems/autotag/badge.svg?branch=master)](https://coveralls.io/github/pantheon-systems/autotag?branch=master)
@@ -7,48 +6,46 @@ AutoTag
 
 Automatically increment version tags to a git repo based on commit messages.
 
-* [AutoTag](#autotag)
-  * [Dependencies](#dependencies)
-  * [Installing](#installing)
-    * [Pre-built binaries](#pre-built-binaries)
-    * [Docker images](#docker-images)
-    * [One-liner](#one-liner)
-  * [Usage](#usage)
-    * [Scheme: Autotag (default)](#scheme-autotag-default)
-    * [Scheme: Conventional Commits](#scheme-conventional-commits)
-    * [Pre-Release Tags](#pre-release-tags)
-    * [Build metadata](#build-metadata)
-  * [Examples](#examples)
-    * [Goreleaser](#goreleaser)
-  * [Troubleshooting](#troubleshooting)
-    * [error getting head commit: object does not exist [id: refs/heads/master, rel_path: ]](#error-getting-head-commit-object-does-not-exist-id-refsheadsmaster-rel_path-)
-  * [Build from Source](#build-from-source)
-  * [Release information](#release-information)
+- [AutoTag](#autotag)
+  - [Dependencies](#dependencies)
+  - [Installing](#installing)
+    - [Pre-built binaries](#pre-built-binaries)
+    - [Docker images](#docker-images)
+    - [One-liner](#one-liner)
+  - [Usage](#usage)
+    - [Scheme: Autotag (default)](#scheme-autotag-default)
+    - [Scheme: Conventional Commits](#scheme-conventional-commits)
+    - [Pre-Release Tags](#pre-release-tags)
+    - [Build metadata](#build-metadata)
+  - [Examples](#examples)
+    - [Goreleaser](#goreleaser)
+  - [Troubleshooting](#troubleshooting)
+    - [error getting head commit: object does not exist [id: refs/heads/master, rel_path: ]](#error-getting-head-commit-object-does-not-exist-id-refsheadsmaster-rel_path-)
+  - [Build from Source](#build-from-source)
+  - [Release information](#release-information)
 
-Dependencies
-------------
+## Dependencies
 
-* [Git 2.x](https://git-scm.com/downloads) available in PATH
+- [Git 2.x](https://git-scm.com/downloads) available in PATH
 
 Version v1.0.0+ depends on the Git CLI, install Git with your distribution's package management
 system.
 
 Versions prior to v1.0.0 use cgo libgit or native golang Git, the binary will work standalone.
 
-Installing
-----------
+## Installing
 
 ### Pre-built binaries
 
 | OS    | Arch  | binary              |
-|-------|-------|---------------------|
+| ----- | ----- | ------------------- |
 | macOS | amd64 | [autotag][releases] |
 | Linux | amd64 | [autotag][releases] |
 
 ### Docker images
 
 | Arch  | Images                                                           |
-|-------|------------------------------------------------------------------|
+| ----- | ---------------------------------------------------------------- |
 | amd64 | `quay.io/pantheon-public/autotag:latest`, `vX.Y.Z`, `vX.Y`, `vX` |
 
 [releases]: https://github.com/pantheon-systems/autotag/releases/latest
@@ -74,8 +71,7 @@ Install a specific version of `autotag`:
 
 > Only versions v1.2.0+ are supported by the install script.
 
-Usage
------
+## Usage
 
 The `autotag` utility will use the current state of the git repository to determine what the next
 tag should be and then creates the tag by executing `git tag`. The `-n` flag will print the next tag but not apply it.
@@ -141,13 +137,13 @@ feat: allow provided config object to extend other configs
 BREAKING CHANGE: `extends` key in config file is now used for extending other config files
 ```
 
-- A commit message header containing a *type* of `feat` will bump the **minor** version:
+- A commit message header containing a _type_ of `feat` will bump the **minor** version:
 
 ```
 feat(lang): add polish language
 ```
 
-- A commit message header containg a `!` after the *type* is considered a breaking change and will
+- A commit message header containg a `!` after the _type_ is considered a breaking change and will
   bump the **major** version:
 
 ```
@@ -160,25 +156,24 @@ If no keywords are specified a **Patch** bump is applied.
 
 `autotag` supports appending additional test to the calculated next version string:
 
-* Use `-p/--pre-release-name=` to append a pre-release **name** to the version. Allowed names are:
-`alpha|beta|pre|rc|dev`. Example, `v1.2.3-dev`
+- Use `-p/--pre-release-name=` to append a pre-release **name** to the version. Pre-release names are subject to the rules outlined in the [SemVer](https://semver.org/#spec-item-9)
+  spec.
 
-* Use `-T/--pre-release-timestmap=` to append **timestamp** to the version. Allowed timetstamp
+- Use `-T/--pre-release-timestmap=` to append **timestamp** to the version. Allowed timetstamp
   formats are `datetime` (YYYYMMDDHHMMSS) or `epoch` (UNIX epoch timestamp in seconds).
 
 ### Build metadata
 
 Optional SemVer build metadata can be appended to the version string after a `+` character using the `-m/--build-metadata` flag. eg: `v1.2.3+foo`
 
-Build metadata is subject to the rules outlined in the [Semver](https://semver.org/#spec-item-10)
+Build metadata is subject to the rules outlined in the [SemVer](https://semver.org/#spec-item-10)
 spec.
 
 A common uses might be the current git reference: `git rev-parse --short HEAD`.
 
 Multiple metadata items should be seperated by a `.`, eg: `foo.bar`
 
-Examples
---------
+## Examples
 
 ```console
 $ autotag
@@ -257,8 +252,7 @@ workflows:
                 - master
 ```
 
-Troubleshooting
----------------
+## Troubleshooting
 
 ### error getting head commit: object does not exist [id: refs/heads/master, rel_path: ]
 
@@ -281,8 +275,7 @@ if [ $(git rev-parse --abbrev-ref HEAD) != "master" ]; then
 fi
 ```
 
-Build from Source
------------------
+## Build from Source
 
 Assuming you have Go 1.5+ installed you can checkout and run make deps build to compile the binary
 at `./autotag/autotag`.
@@ -296,8 +289,7 @@ make test
 make build
 ```
 
-Release information
--------------------
+## Release information
 
 Autotag itself uses `autotag` to increment releases. The default [autotag](#scheme-autotag-default)
 scheme is used for version selection.
