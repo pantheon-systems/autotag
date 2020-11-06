@@ -189,13 +189,6 @@ func validateConfig(cfg GitRepoConfig) error {
 		return fmt.Errorf("'%s' is not valid SemVer pre-release name", cfg.PreReleaseName)
 	}
 
-	// switch cfg.PreReleaseName {
-	// case "", "alpha", "beta", "pre", "rc", "dev":
-	// 	// nothing -- valid values
-	// default:
-	// 	return fmt.Errorf("pre-release-name '%s' is not valid; must be (alpha|beta|pre|rc|dev)", cfg.PreReleaseName)
-	// }
-
 	switch cfg.PreReleaseTimestampLayout {
 	case "", "datetime", "epoch":
 		// nothing -- valid values
