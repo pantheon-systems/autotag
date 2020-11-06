@@ -1,4 +1,5 @@
-# AutoTag
+AutoTag
+=======
 
 [![Circle CI](https://circleci.com/gh/pantheon-systems/autotag.svg?style=shield&circle-token=ef9a68c180d0d470c594d39caf9e2a86fc529935)](https://circleci.com/gh/pantheon-systems/autotag)
 [![Coverage Status](https://coveralls.io/repos/github/pantheon-systems/autotag/badge.svg?branch=master)](https://coveralls.io/github/pantheon-systems/autotag?branch=master)
@@ -24,7 +25,8 @@ Automatically increment version tags to a git repo based on commit messages.
   - [Build from Source](#build-from-source)
   - [Release information](#release-information)
 
-## Dependencies
+Dependencies
+------------
 
 - [Git 2.x](https://git-scm.com/downloads) available in PATH
 
@@ -33,7 +35,8 @@ system.
 
 Versions prior to v1.0.0 use cgo libgit or native golang Git, the binary will work standalone.
 
-## Installing
+Installing
+----------
 
 ### Pre-built binaries
 
@@ -71,7 +74,8 @@ Install a specific version of `autotag`:
 
 > Only versions v1.2.0+ are supported by the install script.
 
-## Usage
+Usage
+-----
 
 The `autotag` utility will use the current state of the git repository to determine what the next
 tag should be and then creates the tag by executing `git tag`. The `-n` flag will print the next tag but not apply it.
@@ -173,7 +177,8 @@ A common uses might be the current git reference: `git rev-parse --short HEAD`.
 
 Multiple metadata items should be seperated by a `.`, eg: `foo.bar`
 
-## Examples
+Examples
+--------
 
 ```console
 $ autotag
@@ -252,7 +257,8 @@ workflows:
                 - master
 ```
 
-## Troubleshooting
+Troubleshooting
+---------------
 
 ### error getting head commit: object does not exist [id: refs/heads/master, rel_path: ]
 
@@ -275,7 +281,8 @@ if [ $(git rev-parse --abbrev-ref HEAD) != "master" ]; then
 fi
 ```
 
-## Build from Source
+Build from Source
+-----------------
 
 Assuming you have Go 1.5+ installed you can checkout and run make deps build to compile the binary
 at `./autotag/autotag`.
@@ -289,7 +296,8 @@ make test
 make build
 ```
 
-## Release information
+Release information
+-------------------
 
 Autotag itself uses `autotag` to increment releases. The default [autotag](#scheme-autotag-default)
 scheme is used for version selection.
