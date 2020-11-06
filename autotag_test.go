@@ -112,15 +112,31 @@ func TestValidateConfig(t *testing.T) {
 			name: "invalid build metadata",
 			cfg: GitRepoConfig{
 				Branch:        "master",
-				BuildMetadata: "foo,bar,^",
+				BuildMetadata: "foo..bar",
 			},
 			shouldErr: true,
 		},
 		{
-			name: "invalid pre-release-name",
+			name: "invalid build metadata - purely empty identifier",
+			cfg: GitRepoConfig{
+				Branch:        "master",
+				BuildMetadata: "...",
+			},
+			shouldErr: true,
+		},
+		{
+			name: "invalid pre-release-name - leading zero",
 			cfg: GitRepoConfig{
 				Branch:         "master",
-				PreReleaseName: "foo",
+				PreReleaseName: "024",
+			},
+			shouldErr: true,
+		},
+		{
+			name: "invalid pre-release-name - empty identifier",
+			cfg: GitRepoConfig{
+				Branch:         "master",
+				PreReleaseName: "...",
 			},
 			shouldErr: true,
 		},
@@ -136,7 +152,7 @@ func TestValidateConfig(t *testing.T) {
 			name: "valid config with all options used",
 			cfg: GitRepoConfig{
 				Branch:                    "master",
-				PreReleaseName:            "dev",
+				PreReleaseName:            "foo",
 				PreReleaseTimestampLayout: "epoch",
 				BuildMetadata:             "g12345678",
 				Prefix:                    true,

@@ -35,9 +35,13 @@ var (
 	// versionRex matches semVer style versions, eg: `v1.0.0`
 	versionRex = regexp.MustCompile(`^v?([\d]+\.?.*)`)
 
+	// semVerPreReleaseName validates SemVer according to
+	// https://semver.org/#spec-item-9
+	semVerPreReleaseName = regexp.MustCompile(`^[0-9A-Za-z-]+$`)
+
 	// semVerBuildMetaRex validates SemVer build metadata strings according to
 	// https://semver.org/#spec-item-10
-	semVerBuildMetaRex = regexp.MustCompile(`^[0-9A-Za-z-\.]+$`)
+	semVerBuildMetaRex = regexp.MustCompile(`^[0-9A-Za-z-]+$`)
 )
 
 var timeNow = time.Now
@@ -181,12 +185,16 @@ func validateConfig(cfg GitRepoConfig) error {
 		return fmt.Errorf("'%s' is not valid SemVer build metadata", cfg.BuildMetadata)
 	}
 
-	switch cfg.PreReleaseName {
-	case "", "alpha", "beta", "pre", "rc", "dev":
-		// nothing -- valid values
-	default:
-		return fmt.Errorf("pre-release-name '%s' is not valid; must be (alpha|beta|pre|rc|dev)", cfg.PreReleaseName)
+	if cfg.PreReleaseName != "" && !validateSemVerPreReleaseName(cfg.PreReleaseName) {
+		return fmt.Errorf("'%s' is not valid SemVer pre-release name", cfg.PreReleaseName)
 	}
+
+	// switch cfg.PreReleaseName {
+	// case "", "alpha", "beta", "pre", "rc", "dev":
+	// 	// nothing -- valid values
+	// default:
+	// 	return fmt.Errorf("pre-release-name '%s' is not valid; must be (alpha|beta|pre|rc|dev)", cfg.PreReleaseName)
+	// }
 
 	switch cfg.PreReleaseTimestampLayout {
 	case "", "datetime", "epoch":
@@ -533,10 +541,23 @@ func findNamedMatches(regex *regexp.Regexp, str string) map[string]string {
 // validateSemVerBuildMetadata validates SemVer build metadata strings according to
 // https://semver.org/#spec-item-10
 func validateSemVerBuildMetadata(meta string) bool {
-	metas := strings.Split(meta, ".")
+	identifiers := strings.Split(meta, ".")
 
-	for _, s := range metas {
-		if !semVerBuildMetaRex.MatchString(s) {
+	for _, s := range identifiers {
+		if s == "" || !semVerBuildMetaRex.MatchString(s) {
+			return false
+		}
+	}
+	return true
+}
+
+// validateSemVerPreReleaseName validates SemVer pre release name according to
+// https://semver.org/#spec-item-9
+func validateSemVerPreReleaseName(meta string) bool {
+	identifiers := strings.Split(meta, ".")
+
+	for _, s := range identifiers {
+		if s == "" || strings.HasPrefix(s, "0") || !semVerPreReleaseName.MatchString(s) {
 			return false
 		}
 	}
