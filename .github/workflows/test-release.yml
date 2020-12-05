@@ -1,0 +1,23 @@
+name: test-release
+on: 
+  push:
+    branches:
+      - 'master'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Test Command
+      run: |
+        echo Hello
+
+  release:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Test Command
+      env:
+        MY_VAR: World
+      run: |
+        echo Hello $MY_VAR 

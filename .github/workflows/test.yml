@@ -1,0 +1,13 @@
+name: test
+on: 
+  push:
+    branches-ignore:
+      - 'master'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Test Command
+      run: |
+        echo Hello
