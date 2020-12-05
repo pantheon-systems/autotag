@@ -12,8 +12,7 @@ jobs:
       run: |
         # Need writable /bin for golangci-lint.sh (TODO: use golangci/golangci-lint-action@v2)j
         sudo chmod 777 /bin
-        # Add go bin to path
-        export PATH=$PATH:$HOME/go/bin
+        echo "$HOME/go/bin" >> $GITHUB_PATH
     - name: Checkout Repo
       uses: actions/checkout@v2
     - name: Restore Go Modules Cache
@@ -37,8 +36,6 @@ jobs:
     - name: Retrieve Modules
       run: |
         go get
-    #- name: TMate Debug
-      #uses: mxschmitt/action-tmate@v3
     - name: Run Coverage Report
       run: |
         make test-circle
