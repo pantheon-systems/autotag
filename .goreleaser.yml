@@ -91,7 +91,7 @@ archives:
 dockers:
   - dockerfile: Dockerfile
     image_templates:
-      - "quay.io/pantheon-public/autotag:{{ .Tag }}" # v1.0.0
-      - "quay.io/pantheon-public/autotag:v{{ .Major }}" # v1
-      - "quay.io/pantheon-public/autotag:v{{ .Major }}.{{ .Minor }}" # v1.0
-      - "quay.io/pantheon-public/autotag:latest"
+      - "quay.io/shawnconn/autotag:{{ .Tag }}" # v1.0.0
+      - "quay.io/shawnconn/autotag:v{{ .Major }}" # v1
+      - "quay.io/shawnconn/autotag:v{{ .Major }}.{{ .Minor }}" # v1.0
+      - "quay.io/shawnconn/autotag:latest"

@@ -49,7 +49,7 @@ Installing
 
 | Arch  | Images                                                           |
 | ----- | ---------------------------------------------------------------- |
-| amd64 | `quay.io/pantheon-public/autotag:latest`, `vX.Y.Z`, `vX.Y`, `vX` |
+| amd64 | `quay.io/shawnconn/autotag:latest`, `vX.Y.Z`, `vX.Y`, `vX` |
 
 [releases]: https://github.com/pantheon-systems/autotag/releases/latest
 
