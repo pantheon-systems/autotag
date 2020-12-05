@@ -27,6 +27,7 @@ jobs:
         sudo mv ./bin/goreleaser /bin
     - name: Install Coverage Tools
       run: |
+        sudo chmod 777 /bin
         make deps-coverage
     - name: Retrieve Modules
       run: |
