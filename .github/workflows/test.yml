@@ -9,7 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Test Command
+      env:
+        QUAY_USER: ${{ secrets.QUAY_USER }}
+        QUAY_PASSWD: ${{ secrets.QUAY_PASSWD }}
       run: |
-        echo $QUAY_USER
-        echo $QUAY_PASSWD
-        echo $GITHUB_TOKEN
+        echo "$QUAY_USER"
+        echo "$QUAY_PASSWD"
+        echo "$GITHUB_TOKEN"
+
