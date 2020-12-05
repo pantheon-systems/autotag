@@ -8,6 +8,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+    - name: Environment Config
+      run: |
+        # Need writable /bin for golangci-lint.sh (TODO: use golangci/golangci-lint-action@v2)j
+        sudo chmod 777 /bin
+        # Add go bin to path
+        export PATH=$PATH:$HOME/go/bin
     - name: Checkout Repo
       uses: actions/checkout@v2
     - name: Restore Go Modules Cache
@@ -27,8 +33,6 @@ jobs:
         sudo mv ./bin/goreleaser /bin
     - name: Install Coverage Tools
       run: |
-        # Need writable /bin for golangci-lint.sh (TODO: use golangci/golangci-lint-action@v2)j
-        sudo chmod 777 /bin
         make deps-coverage
     - name: Retrieve Modules
       run: |
@@ -37,11 +41,6 @@ jobs:
       #uses: mxschmitt/action-tmate@v3
     - name: Run Coverage Report
       run: |
-        # Add go bin to path
-        export PATH=$PATH:$HOME/go/bin
-        #go get github.com/pierrre/gotestcover
-        #which gotestcover
-        #gotestcover --help
         make test-circle
     - name: Build Autotag
       run: |
