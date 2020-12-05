@@ -33,10 +33,12 @@ jobs:
     - name: Retrieve Modules
       run: |
         go get
-    - name: TMate Debug
-      uses: mxschmitt/action-tmate@v3
+    #- name: TMate Debug
+      #uses: mxschmitt/action-tmate@v3
     - name: Run Coverage Report
       run: |
+        # Add go bin to path
+        export PATH=$PATH:$HOME/go/bin
         #go get github.com/pierrre/gotestcover
         #which gotestcover
         #gotestcover --help
