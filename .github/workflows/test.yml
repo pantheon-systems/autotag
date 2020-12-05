@@ -8,12 +8,40 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - name: Test Command
+    - name: Checkout Repo
+      uses: actions/checkout@v2
+    - name: Restore Go Modules Cache
+      uses: actions/cache@v2
       env:
-        QUAY_USER: ${{ secrets.QUAY_USER }}
-        QUAY_PASSWD: ${{ secrets.QUAY_PASSWD }}
+        cache-name: cache-go-modules
+      with:
+        path: /go/pkg/mod
+        key: v1-dependencies-{{ checksum "go.sum" }}
+    - name: Git Config
       run: |
-        echo "$QUAY_USER"
-        echo "$QUAY_PASSWD"
-        echo "$GITHUB_TOKEN"
-
+        git config --global user.email circleci
+        git config --global user.name circleci
+    - name: Install Goreleaser Binary
+      run: |
+        curl -sL https://install.goreleaser.com/github.com/goreleaser/goreleaser.sh | bash
+        sudo mv ./bin/goreleaser /bin
+    - name: Install Coverage Tools
+      run: |
+        make deps-coverage
+    - name: Retrieve Modules
+      run: |
+        go get
+    - name: Run Coverage Report
+      run: |
+        make test-circle
+    - name: Build Autotag
+      run: |
+        make build
+    - name: Goreleaser Check
+      run: |
+        goreleaser check
+    - name: Upload Autotag Build
+      uses: actions/upload-artifact@v2
+      with:
+        name: autotag-build
+        path: .
