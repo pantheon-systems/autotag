@@ -1,0 +1,13 @@
+name: autotag
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      # commands
+      - run: make deps-coverage
+      - run: go get
+      - run: make test-circle
+      - run: make build
+    
