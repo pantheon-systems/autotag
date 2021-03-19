@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -145,6 +146,10 @@ func NewRepo(cfg GitRepoConfig) (*GitRepo, error) {
 	gitDirPath, err := generateGitDirPath(cfg.RepoPath)
 
 	if err != nil {
+		return nil, err
+	}
+
+	if _, err := os.Stat(gitDirPath); os.IsNotExist(err) {
 		return nil, err
 	}
 
