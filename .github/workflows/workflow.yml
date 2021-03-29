@@ -31,8 +31,8 @@ jobs:
       #          path: /go/pkg/mod
       #          key: v1-dependencies-{{ checksum "go.sum" }}
 
-
       - name: Install Coverage Tools
+        # TODO(vtopc): replace with Coveralls GitHub Action as this step is running for 20-30 seconds.
         run: |
           make deps-coverage
 
