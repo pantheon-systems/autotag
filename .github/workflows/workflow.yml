@@ -68,6 +68,9 @@ jobs:
       #          path: autotag/autotag
 
   lint:
+    strategy:
+      matrix:
+        go-version: [ 1.14.x ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
