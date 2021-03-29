@@ -1,7 +1,7 @@
 AutoTag
 =======
 
-[![Circle CI](https://circleci.com/gh/pantheon-systems/autotag.svg?style=shield&circle-token=ef9a68c180d0d470c594d39caf9e2a86fc529935)](https://circleci.com/gh/pantheon-systems/autotag)
+[![CI](https://github.com/pantheon-systems/autotag/actions/workflows/workflow.yml/badge.svg)](https://github.com/pantheon-systems/autotag/actions/workflows/workflow.yml)
 [![Coverage Status](https://coveralls.io/repos/github/pantheon-systems/autotag/badge.svg?branch=master)](https://coveralls.io/github/pantheon-systems/autotag?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/pantheon-systems/autotag)](https://goreportcard.com/report/github.com/pantheon-systems/autotag)
 
