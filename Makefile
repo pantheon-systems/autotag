@@ -10,4 +10,4 @@ snapshot:
 	@goreleaser --rm-dist --snapshot --debug
 
 .PHONY:: test-ci
-test-ci:: test test-coveralls
+test-ci:: test-go test-coveralls
