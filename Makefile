@@ -10,4 +10,4 @@ snapshot:
 	@goreleaser --rm-dist --snapshot --debug
 
 .PHONY:: test-gha
-test-ci:: test-go test-coveralls
+test-gha:: test-go test-coveralls ## for running unit tests on GitHub Actions
