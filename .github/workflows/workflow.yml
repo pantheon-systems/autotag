@@ -31,10 +31,6 @@ jobs:
       #          path: /go/pkg/mod
       #          key: v1-dependencies-{{ checksum "go.sum" }}
 
-      #      - name: Git Config
-      #        run: |
-      #          git config --global user.email circleci
-      #          git config --global user.name circleci
 
       - name: Install Coverage Tools
         run: |
@@ -43,6 +39,11 @@ jobs:
       - name: Download Dependencies
         run: |
           go mod download
+
+      - name: Git Config for Unit Tests
+        run: |
+          git config --global user.email ci
+          git config --global user.name ci
 
       - name: Run Unit Tests and Upload Coverage Report
         run: |
