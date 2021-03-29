@@ -1,4 +1,4 @@
-# golangci-lint configuration
+# golangci-lint configuration, shared between `make lint` and `golangci/golangci-lint-action` GitHub Action
 # https://github.com/golangci/golangci/wiki/Configuration
 
 linters:

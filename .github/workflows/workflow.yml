@@ -106,7 +106,7 @@ jobs:
 #          QUAY_PASSWD: ${{ secrets.QUAY_PASSWD }}
 #        run: |
 #          docker login -u "$QUAY_USER" -p "$QUAY_PASSWD" quay.io
-#      - name: Install RPM
+#      - name: Install rpm
 #        run: |
 #          sudo apt-get -qqy update && sudo apt-get -qqy install rpm
 #      - name: Set Autotag +x
