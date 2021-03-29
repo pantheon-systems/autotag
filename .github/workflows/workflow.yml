@@ -49,10 +49,6 @@ jobs:
         run: |
           make test-gha
 
-      - name: Run Linter
-        # TODO(vtopc): move to a separate job?
-        uses: golangci/golangci-lint-action@v2
-
       # TODO: move into release job:
       #      - name: Build Autotag
       #        run: |
@@ -71,8 +67,17 @@ jobs:
       #          name: autotag-build
       #          path: autotag/autotag
 
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Run Linter
+        uses: golangci/golangci-lint-action@v2
+
 #  release:
-#    needs: test
+#    needs: [test, lint]
 #    runs-on: ubuntu-latest
 #    steps:
 #      - name: Checkout
