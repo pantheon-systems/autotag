@@ -10,3 +10,4 @@ vendor/**
 dist/
 Attic
 .vscode/
+/.idea/
