@@ -49,7 +49,9 @@ jobs:
         run: |
           make test-gha
 
-      # TODO: run linter
+      - name: Run Linter
+        # TODO(vtopc): move to a separate job?
+        uses: golangci/golangci-lint-action@v2
 
       # TODO: move into release job:
       #      - name: Build Autotag
