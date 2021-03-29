@@ -1,0 +1,108 @@
+name: CI
+on:
+  push:
+    branches:
+      - 'master'
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+#      - name: Environment Config
+#        run: |
+#          echo "$HOME/go/bin" >> $GITHUB_PATH
+#          # Set /bin writable for golangci-lint.sh (TODO: refactor w/ golangci/golangci-lint-action@v2 action)
+#          sudo chmod 777 /bin/
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+#      - name: Restore Go Modules Cache
+#        uses: actions/cache@v2
+#        env:
+#          cache-name: cache-go-modules
+#        with:
+#          path: /go/pkg/mod
+#          key: v1-dependencies-{{ checksum "go.sum" }}
+
+#      - name: Git Config
+#        run: |
+#          git config --global user.email circleci
+#          git config --global user.name circleci
+
+      - name: Install Coverage Tools
+        run: |
+          make deps-coverage
+
+      - name: Download Dependencies
+        run: |
+          make deps
+
+      - name: Run Unit Tests and Upload Coverage Report
+        run: |
+          make test-ci
+
+      # TODO: run linter
+
+# TODO: move into release job:
+#      - name: Build Autotag
+#        run: |
+#          make build
+
+      - name: Check goreleaser's Configuration
+        # TODO(vtopc): move to a separate job?
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          version: latest
+          args: check
+
+#      - name: Upload Autotag Build
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: autotag-build
+#          path: autotag/autotag
+
+#  release:
+#    needs: test
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v2
+#        with:
+#          fetch-depth: 0
+#
+#      - name: Download Autotag Build
+#        uses: actions/download-artifact@v2
+#        with:
+#          name: autotag-build
+#          path: autotag/
+#      - name: Restore Go Modules Cache
+#        uses: actions/cache@v2
+#        env:
+#          cache-name: cache-go-modules
+#        with:
+#          path: /go/pkg/mod
+#          key: v1-dependencies-{{ checksum "go.sum" }}
+#      - name: Docker Login
+#        env:
+#          QUAY_USER: ${{ secrets.QUAY_USER }}
+#          QUAY_PASSWD: ${{ secrets.QUAY_PASSWD }}
+#        run: |
+#          docker login -u "$QUAY_USER" -p "$QUAY_PASSWD" quay.io
+#      - name: Install RPM
+#        run: |
+#          sudo apt-get -qqy update && sudo apt-get -qqy install rpm
+#      - name: Set Autotag +x
+#        run: |
+#          chmod +x ./autotag/autotag
+#      - name: Autotag Repo
+#        run: |
+#          ./autotag/autotag
+#      - name: Deploy Autotag Release
+#        run: |
+#          curl -sL https://git.io/goreleaser | bash -s -- --parallelism=2
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#          QUAY_USER: ${{ secrets.QUAY_USER }}
+#          QUAY_PASSWD: ${{ secrets.QUAY_PASSWD }}

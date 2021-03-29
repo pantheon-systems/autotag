@@ -8,3 +8,6 @@ build::
 
 snapshot:
 	@goreleaser --rm-dist --snapshot --debug
+
+.PHONY:: test-ci
+test-ci:: test test-coveralls
