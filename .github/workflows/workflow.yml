@@ -9,27 +9,32 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-#      - name: Environment Config
-#        run: |
-#          echo "$HOME/go/bin" >> $GITHUB_PATH
-#          # Set /bin writable for golangci-lint.sh (TODO: refactor w/ golangci/golangci-lint-action@v2 action)
-#          sudo chmod 777 /bin/
-
       - name: Checkout
         uses: actions/checkout@v2
 
-#      - name: Restore Go Modules Cache
-#        uses: actions/cache@v2
-#        env:
-#          cache-name: cache-go-modules
+#      - name: Set up Go
+#        uses: actions/setup-go@v2
 #        with:
-#          path: /go/pkg/mod
-#          key: v1-dependencies-{{ checksum "go.sum" }}
+#          go-version: 1.14
 
-#      - name: Git Config
-#        run: |
-#          git config --global user.email circleci
-#          git config --global user.name circleci
+      #      - name: Environment Config
+      #        run: |
+      #          echo "$HOME/go/bin" >> $GITHUB_PATH
+      #          # Set /bin writable for golangci-lint.sh (TODO: refactor w/ golangci/golangci-lint-action@v2 action)
+      #          sudo chmod 777 /bin/
+
+      #      - name: Restore Go Modules Cache
+      #        uses: actions/cache@v2
+      #        env:
+      #          cache-name: cache-go-modules
+      #        with:
+      #          path: /go/pkg/mod
+      #          key: v1-dependencies-{{ checksum "go.sum" }}
+
+      #      - name: Git Config
+      #        run: |
+      #          git config --global user.email circleci
+      #          git config --global user.name circleci
 
       - name: Install Coverage Tools
         run: |
@@ -37,7 +42,7 @@ jobs:
 
       - name: Download Dependencies
         run: |
-          make deps
+          go mod download
 
       - name: Run Unit Tests and Upload Coverage Report
         run: |
@@ -45,10 +50,10 @@ jobs:
 
       # TODO: run linter
 
-# TODO: move into release job:
-#      - name: Build Autotag
-#        run: |
-#          make build
+      # TODO: move into release job:
+      #      - name: Build Autotag
+      #        run: |
+      #          make build
 
       - name: Check goreleaser's Configuration
         # TODO(vtopc): move to a separate job?
@@ -57,11 +62,11 @@ jobs:
           version: latest
           args: check
 
-#      - name: Upload Autotag Build
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: autotag-build
-#          path: autotag/autotag
+      #      - name: Upload Autotag Build
+      #        uses: actions/upload-artifact@v2
+      #        with:
+      #          name: autotag-build
+      #          path: autotag/autotag
 
 #  release:
 #    needs: test
