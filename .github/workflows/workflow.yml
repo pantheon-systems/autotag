@@ -17,9 +17,9 @@ jobs:
         with:
           go-version: 1.14
 
-      - name: Environment Config
-        run: |
-          echo "$HOME/go/bin" >> $GITHUB_PATH
+      #      - name: Environment Config
+      #        run: |
+      #          echo "$HOME/go/bin" >> $GITHUB_PATH
       #          # Set /bin writable for golangci-lint.sh (TODO: refactor w/ golangci/golangci-lint-action@v2 action)
       #          sudo chmod 777 /bin/
 
@@ -30,6 +30,7 @@ jobs:
       #        with:
       #          path: /go/pkg/mod
       #          key: v1-dependencies-{{ checksum "go.sum" }}
+
 
       - name: Install Coverage Tools
         run: |
