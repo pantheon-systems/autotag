@@ -47,7 +47,7 @@ jobs:
 
       - name: Run Unit Tests and Upload Coverage Report
         run: |
-          make test-ci
+          make test-gha
 
       # TODO: run linter
 

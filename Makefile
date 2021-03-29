@@ -9,5 +9,5 @@ build::
 snapshot:
 	@goreleaser --rm-dist --snapshot --debug
 
-.PHONY:: test-ci
+.PHONY:: test-gha
 test-ci:: test-go test-coveralls
