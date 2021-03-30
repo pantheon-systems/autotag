@@ -97,38 +97,3 @@ jobs:
         if: github.event_name != 'pull_request'
         run: |
           ./autotag/autotag
-
-#      - name: Download Autotag Build
-#        uses: actions/download-artifact@v2
-#        with:
-#          name: autotag-build
-#          path: autotag/
-#      - name: Restore Go Modules Cache
-#        uses: actions/cache@v2
-#        env:
-#          cache-name: cache-go-modules
-#        with:
-#          path: /go/pkg/mod
-#          key: v1-dependencies-{{ checksum "go.sum" }}
-#      - name: Docker Login
-#        env:
-#          QUAY_USER: ${{ secrets.QUAY_USER }}
-#          QUAY_PASSWD: ${{ secrets.QUAY_PASSWD }}
-#        run: |
-#          docker login -u "$QUAY_USER" -p "$QUAY_PASSWD" quay.io
-#      - name: Install rpm
-#        run: |
-#          sudo apt-get -qqy update && sudo apt-get -qqy install rpm
-#      - name: Set Autotag +x
-#        run: |
-#          chmod +x ./autotag/autotag
-#      - name: Autotag Repo
-#        run: |
-#          ./autotag/autotag
-#      - name: Deploy Autotag Release
-#        run: |
-#          curl -sL https://git.io/goreleaser | bash -s -- --parallelism=2
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#          QUAY_USER: ${{ secrets.QUAY_USER }}
-#          QUAY_PASSWD: ${{ secrets.QUAY_PASSWD }}

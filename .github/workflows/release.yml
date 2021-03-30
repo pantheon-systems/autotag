@@ -1,0 +1,47 @@
+name: CI
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Download Autotag Build
+        # TODO(vtopc): check if artifacts are shared between workflows
+        uses: actions/download-artifact@v2
+        with:
+          name: autotag-build
+          path: autotag/
+
+#      - name: Docker Login
+#        env:
+#          QUAY_USER: ${{ secrets.QUAY_USER }}
+#          QUAY_PASSWD: ${{ secrets.QUAY_PASSWD }}
+#        run: |
+#          docker login -u "$QUAY_USER" -p "$QUAY_PASSWD" quay.io
+
+#      - name: Install rpm
+#        run: |
+#          sudo apt-get -qqy update && sudo apt-get -qqy install rpm
+
+#      - name: Set Autotag +x
+#        run: |
+#          chmod +x ./autotag/autotag
+
+#      - name: Autotag Repo
+#        run: |
+#          ./autotag/autotag
+
+#      - name: Deploy Autotag Release
+#        # TODO(vtopc): switch to the `goreleaser/goreleaser-action` GHA?
+#        run: |
+#          curl -sL https://git.io/goreleaser | bash -s -- --parallelism=2
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#          QUAY_USER: ${{ secrets.QUAY_USER }}
+#          QUAY_PASSWD: ${{ secrets.QUAY_PASSWD }}
