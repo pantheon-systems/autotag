@@ -74,6 +74,11 @@ jobs:
         if: github.event_name == 'pull_request'
         run: echo "This is PR"
 
+      - name: Download Dependencies
+        # TODO(vtopc): after #41 move this into release.yml
+        run: |
+          go mod download
+
       - name: Build Autotag
         # TODO(vtopc): after #41 move this into release.yml
         run: |
