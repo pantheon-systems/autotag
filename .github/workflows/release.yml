@@ -18,11 +18,11 @@ jobs:
           chmod +x ./autotag/autotag
 
       - name: Docker Login
-        env:
-          QUAY_USER: ${{ secrets.QUAY_USER }}
-          QUAY_PASSWD: ${{ secrets.QUAY_PASSWD }}
-        run: |
-          docker login -u "$QUAY_USER" -p "$QUAY_PASSWD" quay.io
+        uses: docker/login-action@v1
+        with:
+          registry: quay.io
+          username: ${{ secrets.QUAY_USER }}
+          password: ${{ secrets.QUAY_PASSWD }}
 
       - name: Install rpm
         run: |
