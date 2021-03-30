@@ -76,15 +76,26 @@ jobs:
       - name: Run Linter
         uses: golangci/golangci-lint-action@v2
 
-#  release:
-#    needs: [test, lint]
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@v2
-#        with:
-#          fetch-depth: 0
-#
+  release:
+    needs: [test, lint]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Logging
+        run: echo ${{ env.BRANCH_NAME }}
+
+      - name: Merge
+        if: github.event_name != 'pull_request'
+        run: echo "This is merge"
+
+      - name: PR
+        if: github.event_name == 'pull_request'
+        run: echo "This is PR"
+
 #      - name: Download Autotag Build
 #        uses: actions/download-artifact@v2
 #        with:
