@@ -12,7 +12,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - run: sleep 1m
+      - run: sleep 2m
 
       - name: Download Autotag Build
         # TODO(vtopc): check if artifacts are shared between workflows
