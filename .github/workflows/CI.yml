@@ -78,3 +78,9 @@ jobs:
           make build
           chmod +x ./autotag/autotag
           ./autotag/autotag
+
+      - name: Upload Autotag Build
+        uses: actions/upload-artifact@v2
+        with:
+          name: autotag-build
+          path: autotag/autotag
