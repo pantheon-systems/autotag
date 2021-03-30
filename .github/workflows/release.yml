@@ -17,16 +17,16 @@ jobs:
           make build
           chmod +x ./autotag/autotag
 
+      - name: Install rpm
+        run: |
+          sudo apt-get -qqy update && sudo apt-get -qqy install rpm
+
       - name: Docker Login
         uses: docker/login-action@v1
         with:
           registry: quay.io
           username: ${{ secrets.QUAY_USER }}
           password: ${{ secrets.QUAY_PASSWD }}
-
-      - name: Install rpm
-        run: |
-          sudo apt-get -qqy update && sudo apt-get -qqy install rpm
 
 #      - name: Deploy Autotag Release
 #        # TODO(vtopc): switch to the `goreleaser/goreleaser-action` GHA?
