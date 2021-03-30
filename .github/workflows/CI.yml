@@ -90,6 +90,7 @@ jobs:
         with:
           name: autotag-build
           path: autotag/autotag
+          if-no-files-found: error
 
       - name: Autotag Repo
         # TODO: replace this with GitHub Action after #41
