@@ -85,14 +85,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Logging
-        run: echo ${{ env.BRANCH_NAME }}
-
-      - name: Merge
+      - name: Merge check
         if: github.event_name != 'pull_request'
         run: echo "This is merge"
 
-      - name: PR
+      - name: PR check
         if: github.event_name == 'pull_request'
         run: echo "This is PR"
 
