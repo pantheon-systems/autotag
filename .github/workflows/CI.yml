@@ -74,26 +74,10 @@ jobs:
         if: github.event_name == 'pull_request'
         run: echo "This is PR"
 
-      - name: Download Dependencies
-        # TODO(vtopc): after #41 move this into release.yml
-        run: |
-          go mod download
-
-      - name: Build Autotag
-        # TODO(vtopc): after #41 move this into release.yml
-        run: |
-          make build
-          chmod +x ./autotag/autotag
-
-      - name: Upload Autotag Build
-        uses: actions/upload-artifact@v2
-        with:
-          name: autotag-build
-          path: autotag/autotag
-          if-no-files-found: error
-
-      - name: Autotag Repo
+      - name: Autotag Merge Commit
         # TODO: replace this with GitHub Action after #41
         if: github.event_name != 'pull_request'
         run: |
+          make build
+          chmod +x ./autotag/autotag
           ./autotag/autotag
