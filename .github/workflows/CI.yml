@@ -76,7 +76,7 @@ jobs:
       - name: Run Linter
         uses: golangci/golangci-lint-action@v2
 
-  release:
+  release-check:
     needs: [test, lint]
     runs-on: ubuntu-latest
     steps:
