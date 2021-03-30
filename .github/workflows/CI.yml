@@ -57,7 +57,7 @@ jobs:
           args: check
 
   release-check:
-    # Checks if this is a merge in to the master and creates a new tag
+    # Checks if this is a merge into the master and creates a new tag
     needs: [test, lint, goreleaser-check]
     runs-on: ubuntu-latest
     steps:
