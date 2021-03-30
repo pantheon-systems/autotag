@@ -55,8 +55,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - run: exit 1
-
       - name: Run Linter
         uses: golangci/golangci-lint-action@v2
 
