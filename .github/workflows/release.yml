@@ -3,6 +3,7 @@ on:
   push:
     tags:
       - v*
+  pull_request: # TODO: remove
 
 jobs:
   release:
@@ -10,6 +11,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
+      - run: sleep 1m
 
       - name: Download Autotag Build
         # TODO(vtopc): check if artifacts are shared between workflows
