@@ -49,35 +49,32 @@ jobs:
         run: |
           make test-gha
 
-      # TODO: move into release job:
-      #      - name: Build Autotag
-      #        run: |
-      #          make build
-
-      - name: Check goreleaser's Configuration
-        # TODO(vtopc): move to a separate job?
-        uses: goreleaser/goreleaser-action@v2
-        with:
-          version: latest
-          args: check
-
-      #      - name: Upload Autotag Build
-      #        uses: actions/upload-artifact@v2
-      #        with:
-      #          name: autotag-build
-      #          path: autotag/autotag
-
   lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - run: exit 1
+
       - name: Run Linter
         uses: golangci/golangci-lint-action@v2
 
+  goreleaser-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Check goreleaser's Configuration
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          version: latest
+          args: check
+
   release-check:
-    needs: [test, lint]
+    # Checks if this is a merge in to the master and creates a new tag
+    needs: [test, lint, goreleaser-check]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -92,6 +89,18 @@ jobs:
       - name: PR check
         if: github.event_name == 'pull_request'
         run: echo "This is PR"
+
+      - name: Build Autotag
+        # TODO(vtopc): move into Autotag Repo
+        run: |
+          make build
+          chmod +x ./autotag/autotag
+
+      - name: Autotag Repo
+        # TODO: replace this with GitHub Action after #41
+        if: github.event_name != 'pull_request'
+        run: |
+          ./autotag/autotag
 
 #      - name: Download Autotag Build
 #        uses: actions/download-artifact@v2
