@@ -159,6 +159,10 @@ func NewRepo(cfg GitRepoConfig) (*GitRepo, error) {
 		return nil, err
 	}
 
+	if cfg.Branch == "main" && !repo.IsBranchExist(cfg.Branch) {
+		cfg.Branch = "master"
+	}
+
 	r := &GitRepo{
 		repo:                      repo,
 		branch:                    cfg.Branch,
