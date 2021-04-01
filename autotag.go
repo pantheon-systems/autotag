@@ -14,7 +14,7 @@ import (
 
 	"regexp"
 
-	"github.com/gogits/git-module"
+	"github.com/gogs/git-module"
 	"github.com/hashicorp/go-version"
 )
 

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/alecthomas/assert"
-	"github.com/gogits/git-module"
+	"github.com/gogs/git-module"
 )
 
 func init() {

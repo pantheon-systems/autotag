@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/gogits/git-module"
+	"github.com/gogs/git-module"
 )
 
 func checkFatal(t *testing.T, err error) {
