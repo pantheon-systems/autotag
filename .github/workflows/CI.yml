@@ -20,6 +20,8 @@ jobs:
         run: |
           make deps-coverage
 
+      # TODO: add cache https://github.com/actions/cache/blob/main/examples.md#go---modules
+
       - name: Download Dependencies
         run: |
           go mod download
