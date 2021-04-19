@@ -118,7 +118,7 @@ endif
 deps-coverage::
 ifeq (, $(shell which gotestcover))
 	$(call INFO, "installing gotestcover")
-	@GO111MODULE=off go get github.com/pierrre/gotestcover > /dev/null
+	@GO111MODULE=off go get github.com/pierrre/gotestcover
 endif
 ifeq (, $(shell which goveralls))
 	$(call INFO, "installing goveralls")
