@@ -15,6 +15,14 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
 
+      - name: Restore Go Modules Cache
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
       - name: Install Coverage Tools
         # TODO(vtopc): replace with Coveralls GitHub Action as this step is running for 20-30 seconds.
         run: |
