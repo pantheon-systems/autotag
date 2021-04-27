@@ -70,6 +70,7 @@ jobs:
 
   tag:
     # Checks if this is a merge into the master and creates a new tag if yes.
+    if: github.event_name != 'pull_request'
     needs: [test, lint, goreleaser-check]
     runs-on: ubuntu-latest
     steps:
@@ -78,18 +79,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: PR check
-        if: github.event_name == 'pull_request'
-        run: echo "This is PR, skip tagging"
-
       - name: Autotag Merge Commit
         # TODO: replace this with GitHub Action after #41
-        if: github.event_name != 'pull_request'
         run: |
           echo "This is merge commit, tagging"
           make build
           chmod +x ./autotag/autotag
-          ./autotag/autotag
+# TODO: uncomment:
+#          ./autotag/autotag
 
       - name: Upload Autotag Build
         uses: actions/upload-artifact@v2
