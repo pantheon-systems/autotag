@@ -85,8 +85,7 @@ jobs:
           echo "This is merge commit, tagging"
           make build
           chmod +x ./autotag/autotag
-# TODO: uncomment:
-#          ./autotag/autotag
+          ./autotag/autotag
 
       - name: Upload Autotag Build
         uses: actions/upload-artifact@v2
