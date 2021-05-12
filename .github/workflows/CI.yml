@@ -79,6 +79,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Restore Go Modules Cache
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
       - name: Autotag Merge Commit
         # TODO: replace this with GitHub Action after #41
         run: |
