@@ -91,7 +91,7 @@ jobs:
           echo "This is merge commit, tagging"
           make build
           chmod +x ./autotag/autotag
-          ./autotag/autotag
+          ./autotag/autotag -v
           git tag -l
 
       - name: Upload Autotag Build
