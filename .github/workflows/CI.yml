@@ -86,13 +86,16 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: Autotag Merge Commit
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         # TODO: replace this with GitHub Action after #41
         run: |
           echo "This is merge commit, tagging"
           make build
           chmod +x ./autotag/autotag
           ./autotag/autotag -v
-          git tag -l
+
+          echo "tags:" && git tag -l
 
       - name: Upload Autotag Build
         uses: actions/upload-artifact@v2
