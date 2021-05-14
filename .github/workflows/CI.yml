@@ -1,0 +1,100 @@
+name: CI
+on:
+  push:
+    branches:
+      - 'master'
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+
+      - name: Restore Go Modules Cache
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Environment Config
+        run: |
+          echo "$HOME/go/bin" >> $GITHUB_PATH
+
+      - name: Install Coverage Tools
+        # TODO(vtopc): replace with Coveralls GitHub Action as this step is running for 20-30 seconds.
+        run: |
+          make deps-coverage
+
+      - name: Download Dependencies
+        run: |
+          go mod download
+
+      - name: Git Config for Unit Tests
+        run: |
+          git config --global user.email ci
+          git config --global user.name ci
+
+      - name: Run Unit Tests and Upload Coverage Report
+        run: |
+          make test-gha
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Run Linter
+        uses: golangci/golangci-lint-action@v2
+
+  goreleaser-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Check goreleaser's Configuration
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          version: latest
+          args: check
+
+  tag:
+    # Checks if this is a merge into the master and creates a new tag if yes.
+    if: github.event_name != 'pull_request'
+    needs: [test, lint, goreleaser-check]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Restore Go Modules Cache
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Autotag Merge Commit
+        # TODO: replace this with GitHub Action after #41
+        run: |
+          echo "This is merge commit, tagging"
+          make build
+          chmod +x ./autotag/autotag
+          ./autotag/autotag
+
+      - name: Upload Autotag Build
+        uses: actions/upload-artifact@v2
+        with:
+          name: autotag-build
+          path: autotag/autotag

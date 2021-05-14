@@ -1,0 +1,9 @@
+# golangci-lint configuration, shared between `make lint` and `golangci/golangci-lint-action` GitHub Action
+# https://github.com/golangci/golangci/wiki/Configuration
+
+linters:
+  enable:
+    - goimports
+
+service:
+  golangci-lint-version: 1.39.x # use the fixed version to not introduce new linters unexpectedly
