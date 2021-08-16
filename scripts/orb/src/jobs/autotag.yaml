@@ -1,0 +1,28 @@
+version: 2.1
+
+description: >
+  Autotag orb
+
+display:
+  home_url: "https://www.github.com/pantheon-systems/autotag.git"
+  source_url: "https://www.github.com/pantheon-systems/autotag.git"
+
+executor: autotag
+
+jobs:
+  parameters:
+    scheme:
+      type: enum
+      enum: ["autotag", "conventional"]
+      default: "autotag"
+      description: "The versioning scheme"
+  steps:
+    - checkout
+    - run:
+      name: Run autotag on the current branch.
+      command: |
+        autotag -b ${CIRCLE_BRANCH} -s <<parameters.scheme>>
+    - run:
+      name: Push the autotag changes to Github.
+      command: |
+        git push --tags

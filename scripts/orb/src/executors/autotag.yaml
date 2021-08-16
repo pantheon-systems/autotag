@@ -1,0 +1,4 @@
+description:
+  This runs the autotag binary as an executor.
+docker:
+  - image: 'quay.io/pantheon-public/autotag:v1'
