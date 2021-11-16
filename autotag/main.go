@@ -28,7 +28,7 @@ var opts Options
 func init() {
 	_, err := flags.Parse(&opts)
 	if err != nil {
-		log.Println(err)
+		fmt.Fprintf(os.Stderr, err.Error())
 		os.Exit(1)
 	}
 }
@@ -50,7 +50,7 @@ func main() {
 	})
 
 	if err != nil {
-		fmt.Println("Error initializing: ", err)
+		fmt.Fprintf(os.Stderr, "Error initializing: %s", err.Error())
 		os.Exit(1)
 	}
 
@@ -58,7 +58,7 @@ func main() {
 	if !opts.JustVersion {
 		err = r.AutoTag()
 		if err != nil {
-			fmt.Println("Error auto updating version: ", err.Error())
+			fmt.Fprintf(os.Stderr, "Error auto updating version: %s", err.Error())
 			os.Exit(1)
 		}
 	}
