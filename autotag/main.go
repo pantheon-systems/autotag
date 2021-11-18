@@ -50,7 +50,8 @@ func main() {
 	})
 
 	if err != nil {
-		fmt.Println("Error initializing: ", err)
+		log.SetOutput(os.Stderr)
+		log.Println("Error initializing: " + err.Error())
 		os.Exit(1)
 	}
 
@@ -58,7 +59,8 @@ func main() {
 	if !opts.JustVersion {
 		err = r.AutoTag()
 		if err != nil {
-			fmt.Println("Error auto updating version: ", err.Error())
+			log.SetOutput(os.Stderr)
+			log.Println("Error auto updating version: " + err.Error())
 			os.Exit(1)
 		}
 	}
