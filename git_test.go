@@ -105,9 +105,9 @@ func updateReadme(t *testing.T, repo *git.Repository, content string) {
 }
 
 func repoRoot(r *git.Repository) string {
-	checkPath := r.Path
-	if filepath.Base(r.Path) == ".git" {
-		checkPath = r.Path + "/../"
+	checkPath := r.Path()
+	if filepath.Base(checkPath) == ".git" {
+		checkPath = checkPath + "/../"
 	}
 
 	p, err := filepath.Abs(checkPath)

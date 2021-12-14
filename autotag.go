@@ -154,7 +154,7 @@ func NewRepo(cfg GitRepoConfig) (*GitRepo, error) {
 	}
 
 	log.Println("Opening repo at", gitDirPath)
-	repo, err := git.OpenRepository(gitDirPath)
+	repo, err := git.Open(gitDirPath)
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +220,7 @@ func (r *GitRepo) parseTags() error {
 
 	versions := make(map[*version.Version]*git.Commit)
 
-	tags, err := r.repo.GetTags()
+	tags, err := r.repo.Tags()
 	if err != nil {
 		return fmt.Errorf("failed to fetch tags: %s", err.Error())
 	}
@@ -237,7 +237,7 @@ func (r *GitRepo) parseTags() error {
 			continue
 		}
 
-		c, err := r.repo.GetCommit(commit)
+		c, err := r.repo.CommitByRevision(commit)
 		if err != nil {
 			return fmt.Errorf("error reading commit '%s':  %s", commit, err)
 		}
@@ -300,7 +300,7 @@ func (r *GitRepo) LatestVersion() string {
 }
 
 func (r *GitRepo) retrieveBranchInfo() error {
-	id, err := r.repo.GetBranchCommitID(r.branch)
+	id, err := r.repo.BranchCommitID(r.branch)
 	if err != nil {
 		return fmt.Errorf("error getting head commit: %s ", err.Error())
 	}
@@ -363,22 +363,23 @@ func (r *GitRepo) calcVersion() error {
 		return err
 	}
 
-	startCommit, err := r.repo.GetBranchCommit(r.branch)
+	startCommit, err := r.repo.BranchCommit(r.branch)
 	if err != nil {
 		return err
 	}
 
-	l, err := r.repo.CommitsBetween(startCommit, r.currentTag)
+	revList := []string{fmt.Sprintf("%s..%s", r.currentTag.ID, startCommit.ID)}
+	l, err := r.repo.RevList(revList)
 	if err != nil {
 		log.Printf("Error loading history for tag '%s': %s ", r.currentVersion, err.Error())
 	}
+	// r.branchID is newest commit; r.currentTag.ID is oldest
 	log.Printf("Checking commits from %s to %s ", r.branchID, r.currentTag.ID)
 
 	// Sort the commits oldest to newest. Then process each commit for bumper commands.
-	for e := l.Back(); e != nil; e = e.Prev() {
-		commit := e.Value.(*git.Commit)
+	for _, commit := range l {
 		if commit == nil {
-			return fmt.Errorf("commit pointed to nil object. This should not happen: %v", e)
+			return fmt.Errorf("commit pointed to nil object. This should not happen.")
 		}
 
 		v, nerr := r.parseCommit(commit)
@@ -439,7 +440,7 @@ func (r *GitRepo) tagNewVersion() error {
 // parseCommit looks at HEAD commit see if we want to increment major/minor/patch
 func (r *GitRepo) parseCommit(commit *git.Commit) (*version.Version, error) {
 	var b bumper
-	msg := commit.Message()
+	msg := commit.Message
 	log.Printf("Parsing %s: %s\n", commit.ID, msg)
 
 	switch r.scheme {
