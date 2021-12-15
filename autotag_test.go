@@ -53,7 +53,7 @@ type testRepoSetup struct {
 func newTestRepo(t *testing.T, setup testRepoSetup) GitRepo {
 	tr := createTestRepo(t)
 
-	repo, err := git.OpenRepository(tr)
+	repo, err := git.Open(tr)
 	checkFatal(t, err)
 
 	branch := setup.branch
@@ -81,7 +81,7 @@ func newTestRepo(t *testing.T, setup testRepoSetup) GitRepo {
 	}
 
 	r, err := NewRepo(GitRepoConfig{
-		RepoPath:                  repo.Path,
+		RepoPath:                  repo.Path(),
 		Branch:                    branch,
 		PreReleaseName:            setup.preReleaseName,
 		PreReleaseTimestampLayout: setup.preReleaseTimestampLayout,
@@ -225,14 +225,14 @@ func TestPatch(t *testing.T) {
 
 func TestMissingInitialTag(t *testing.T) {
 	tr := createTestRepo(t)
-	repo, err := git.OpenRepository(tr)
+	repo, err := git.Open(tr)
 	checkFatal(t, err)
 	defer cleanupTestRepo(t, repo)
 
 	updateReadme(t, repo, "a commit before any usable tag has been created")
 
 	_, err = NewRepo(GitRepoConfig{
-		RepoPath: repo.Path,
+		RepoPath: repo.Path(),
 		Branch:   "master",
 	})
 	assert.Error(t, err)
@@ -453,7 +453,7 @@ func TestAutoTag(t *testing.T) {
 				assert.NoError(t, err)
 			}
 
-			tags, err := r.repo.GetTags()
+			tags, err := r.repo.Tags()
 			checkFatal(t, err)
 			assert.Contains(t, tags, tc.expectedTag)
 		})
