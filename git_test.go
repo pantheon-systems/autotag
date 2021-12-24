@@ -26,7 +26,7 @@ func checkFatal(t *testing.T, err error) {
 	t.Fatalf("Fail at %v:%v; %v", file, line, err)
 }
 
-func createTestRepo(t *testing.T) string {
+func createTestRepo(t *testing.T, branch string) string {
 	// figure out where we can create the test repo
 	path, err := ioutil.TempDir("", "autoTagTest")
 	checkFatal(t, err)
@@ -37,6 +37,15 @@ func createTestRepo(t *testing.T) string {
 	err = exec.Command("git", "init", path).Run()
 	if err != nil {
 		checkFatal(t, err)
+	}
+
+	// using two-step init / checkout -b to change default branch,
+	// as opposed to init.defaultBranch, which would require Git 2.28+
+	if branch != "" {
+		err := exec.Command("git", "--git-dir="+path+"/.git", "checkout", "-b", branch).Run()
+		if err != nil {
+			checkFatal(t, err)
+		}
 	}
 
 	tmpfile := "README"

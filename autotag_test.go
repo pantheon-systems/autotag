@@ -51,7 +51,7 @@ type testRepoSetup struct {
 // testing the autotag package.
 // You must call cleanupTestRepo(t, r.repo) to remove the temporary directory after running tests.
 func newTestRepo(t *testing.T, setup testRepoSetup) GitRepo {
-	tr := createTestRepo(t)
+	tr := createTestRepo(t, setup.branch)
 
 	repo, err := git.Open(tr)
 	checkFatal(t, err)
@@ -224,7 +224,7 @@ func TestPatch(t *testing.T) {
 }
 
 func TestMissingInitialTag(t *testing.T) {
-	tr := createTestRepo(t)
+	tr := createTestRepo(t, "")
 	repo, err := git.Open(tr)
 	checkFatal(t, err)
 	defer cleanupTestRepo(t, repo)
