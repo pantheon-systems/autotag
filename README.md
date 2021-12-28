@@ -80,10 +80,10 @@ Usage
 The `autotag` utility will use the current state of the git repository to determine what the next
 tag should be and then creates the tag by executing `git tag`. The `-n` flag will print the next tag but not apply it.
 
-`autotag` scans the `master` branch for commits by default. Use `-b/--branch` to scan a different
-branch. The utility first looks to find the most-recent reachable tag that matches a supported
-versioning scheme. If no tags can be found the utility bails-out, so you do need to create a
-`v0.0.0` tag before using `autotag`.
+`autotag` scans the `main` branch for commits by default. If no `main` branch is found, it will
+fall back to the `master` branch.  Use `-b/--branch` to scan a different branch. The utility first
+looks to find the most-recent reachable tag that matches a supported versioning scheme. If no tags
+can be found the utility bails-out, so you do need to create a `v0.0.0` tag before using `autotag`.
 
 Once the last reachable tag has been found, the `autotag` utility inspects each commit between the
 tag and `HEAD` of the branch to determine how to increment the version.
