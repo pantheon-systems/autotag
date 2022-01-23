@@ -45,6 +45,9 @@ type testRepoSetup struct {
 	// (optional) commit message to use for the next, untagged commit. Settings this allows for testing the
 	// commit message parsing logic. eg: "#major this is a major commit"
 	nextCommit string
+
+	// (optional) Supply a list of commits to apply so you can test the logic between to possible tags wheere they may be more complex multiple bumps
+	commitList []string
 }
 
 // newTestRepo creates a new git repo in a temporary directory and returns an autotag.GitRepo struct for
@@ -78,6 +81,12 @@ func newTestRepo(t *testing.T, setup testRepoSetup) GitRepo {
 
 	if setup.nextCommit != "" {
 		updateReadme(t, repo, setup.nextCommit)
+	}
+
+	if len(setup.commitList) != 0 {
+		for _, c := range setup.commitList {
+			updateReadme(t, repo, c)
+		}
 	}
 
 	r, err := NewRepo(GitRepoConfig{
@@ -372,6 +381,22 @@ func TestAutoTag(t *testing.T) {
 			},
 			expectedTag: "2.0.0",
 		},
+		{
+			name: "autotag scheme, Bump with Major with interstitial minor changes",
+			setup: testRepoSetup{
+				scheme:        "autotag",
+				initialTag:    "1.0.0",
+				disablePrefix: true,
+				commitList: []string{
+					"#patch: thing 1",
+					"[minor]: break thing 1",
+					"feat: thing 2",
+					"[major]: drop support for Node 6",
+				},
+			},
+			expectedTag: "2.0.0",
+		},
+
 		// tests for conventional commits scheme. Based on:
 		// https://www.conventionalcommits.org/en/v1.0.0/#summary
 		// and
@@ -438,6 +463,20 @@ func TestAutoTag(t *testing.T) {
 				initialTag: "v1.0.0",
 			},
 			expectedTag: "v1.0.1",
+		},
+		{
+			name: "conventional commits, breaking change with minor interstitial commits",
+			setup: testRepoSetup{
+				scheme: "conventional",
+				commitList: []string{
+					"feat: thing 1",
+					"feat!: break thing 1",
+					"feat: thing 2",
+					"refactor(runtime)!: drop support for Node 6",
+				},
+				initialTag: "v1.0.0",
+			},
+			expectedTag: "v2.0.0",
 		},
 	}
 
