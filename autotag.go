@@ -262,7 +262,6 @@ func (r *GitRepo) parseTags() error {
 	}
 
 	return fmt.Errorf("no stable (non pre-release) version tags found")
-
 }
 
 func maybeVersionFromTag(tag string) (*version.Version, error) {
@@ -369,15 +368,18 @@ func (r *GitRepo) calcVersion() error {
 	}
 
 	revList := []string{fmt.Sprintf("%s..%s", r.currentTag.ID, startCommit.ID)}
+
 	l, err := r.repo.RevList(revList)
 	if err != nil {
 		log.Printf("Error loading history for tag '%s': %s ", r.currentVersion, err.Error())
 	}
+
 	// r.branchID is newest commit; r.currentTag.ID is oldest
 	log.Printf("Checking commits from %s to %s ", r.branchID, r.currentTag.ID)
 
-	// Sort the commits oldest to newest. Then process each commit for bumper commands.
-	for _, commit := range l {
+	// Revlist returns in reverse Crhonological We want chonological. Then check each commit for bump messages
+	for i := len(l) - 1; i >= 0; i-- {
+		commit := l[i] // getting the reverse order element
 		if commit == nil {
 			return fmt.Errorf("commit pointed to nil object. This should not happen.")
 		}
@@ -390,7 +392,6 @@ func (r *GitRepo) calcVersion() error {
 		if v != nil {
 			r.newVersion = v
 		}
-
 	}
 
 	// if there is no movement on the version from commits, bump patch
