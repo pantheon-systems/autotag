@@ -159,6 +159,29 @@ func NewRepo(cfg GitRepoConfig) (*GitRepo, error) {
 		return nil, err
 	}
 
+	if cfg.Branch == "" {
+		branches, err := repo.Branches()
+		if err != nil {
+			return nil, err
+		}
+
+		// Locate main or master branch.
+		// If main is found, stop searching and use it.
+		// If master is found first, store it, but keep searching for main.
+		for _, b := range branches {
+			if b == "main" {
+				cfg.Branch = "main"
+				break
+			}
+			if b == "master" {
+				cfg.Branch = "master"
+			}
+		}
+		if cfg.Branch == "" {
+			return nil, fmt.Errorf("no main or master branch found")
+		}
+	}
+
 	r := &GitRepo{
 		repo:                      repo,
 		branch:                    cfg.Branch,
@@ -182,10 +205,6 @@ func NewRepo(cfg GitRepoConfig) (*GitRepo, error) {
 }
 
 func validateConfig(cfg GitRepoConfig) error {
-	if cfg.Branch == "" {
-		return fmt.Errorf("must specify a branch")
-	}
-
 	if cfg.BuildMetadata != "" && !validateSemVerBuildMetadata(cfg.BuildMetadata) {
 		return fmt.Errorf("'%s' is not valid SemVer build metadata", cfg.BuildMetadata)
 	}

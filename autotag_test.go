@@ -2,6 +2,7 @@ package autotag
 
 import (
 	"fmt"
+	"os/exec"
 	"testing"
 	"time"
 
@@ -54,7 +55,7 @@ type testRepoSetup struct {
 // testing the autotag package.
 // You must call cleanupTestRepo(t, r.repo) to remove the temporary directory after running tests.
 func newTestRepo(t *testing.T, setup testRepoSetup) GitRepo {
-	tr := createTestRepo(t)
+	tr := createTestRepo(t, setup.branch)
 
 	repo, err := git.Open(tr)
 	checkFatal(t, err)
@@ -112,11 +113,6 @@ func TestValidateConfig(t *testing.T) {
 		cfg       GitRepoConfig
 		shouldErr bool
 	}{
-		{
-			name:      "missing branch",
-			cfg:       GitRepoConfig{},
-			shouldErr: true,
-		},
 		{
 			name: "invalid build metadata",
 			cfg: GitRepoConfig{
@@ -182,8 +178,118 @@ func TestValidateConfig(t *testing.T) {
 	}
 }
 
+func TestNewRepo(t *testing.T) {
+	var newRepoTests = []struct {
+		createBranch  string
+		requestBranch string
+		expectBranch  string
+	}{
+		{"main", "main", "main"},
+		{"main", "", "main"},
+		{"master", "master", "master"},
+		{"master", "", "master"},
+	}
+
+	for _, tt := range newRepoTests {
+		tr := createTestRepo(t, tt.createBranch)
+
+		repo, err := git.Open(tr)
+		checkFatal(t, err)
+
+		tag := "v0.0.1"
+		seedTestRepo(t, tag, repo)
+
+		r, err := NewRepo(GitRepoConfig{
+			Branch:   tt.requestBranch,
+			RepoPath: repo.Path(),
+		})
+
+		if err != nil {
+			t.Fatal("Error creating repo: ", err)
+		}
+
+		if r.branch != tt.expectBranch {
+			t.Fatalf("Expected branch %s, got [%s]", tt.expectBranch, r.branch)
+		}
+	}
+}
+
+func TestNewRepoMainAndMaster(t *testing.T) {
+	// create repo w/"master" branch
+	tr := createTestRepo(t, "master")
+
+	repo, err := git.Open(tr)
+	checkFatal(t, err)
+
+	seedTestRepo(t, "v0.0.1", repo)
+
+	// also create "main" branch
+	f := repoRoot(repo) + "/main"
+	err = exec.Command("touch", f).Run()
+	if err != nil {
+		fmt.Println("FAILED to touch the file ", f, err)
+		checkFatal(t, err)
+	}
+
+	cmd := exec.Command("git", "checkout", "-b", "main")
+	cmd.Dir = repoRoot(repo)
+	err = cmd.Run()
+	if err != nil {
+		fmt.Println("FAILED to create/checkout main branch", err)
+		checkFatal(t, err)
+	}
+
+	makeCommit(repo, "this is a commit on main")
+	makeTag(repo, "v0.2.1")
+
+	// check results
+	var newRepoTests = []struct {
+		requestBranch string
+		expectBranch  string
+	}{
+		{"main", "main"},
+		{"master", "master"},
+		{"", "main"},
+	}
+
+	for _, tt := range newRepoTests {
+		r, err := NewRepo(GitRepoConfig{
+			Branch:   tt.requestBranch,
+			RepoPath: repo.Path(),
+		})
+
+		if err != nil {
+			t.Fatal("Error creating repo: ", err)
+		}
+
+		if r.branch != tt.expectBranch {
+			t.Fatalf("Expected branch %s, got [%s]", tt.expectBranch, r.branch)
+		}
+	}
+}
+
 func TestMajor(t *testing.T) {
 	r := newTestRepo(t, testRepoSetup{
+		branch:     "master",
+		initialTag: "v1.0.1",
+	})
+	defer cleanupTestRepo(t, r.repo)
+
+	v, err := r.MajorBump()
+	if err != nil {
+		t.Fatal("MajorBump failed: ", err)
+	}
+
+	if v.String() != "2.0.0" {
+		t.Fatalf("MajorBump failed expected '2.0.0' got '%s' ", v)
+	}
+
+	fmt.Printf("Major is now %s\n", v)
+}
+
+func TestMajorWithMain(t *testing.T) {
+	r := newTestRepo(t, testRepoSetup{
+		branch:     "main",
 		initialTag: "v1.0.1",
 	})
 	defer cleanupTestRepo(t, r.repo)
@@ -233,7 +339,7 @@ func TestPatch(t *testing.T) {
 }
 
 func TestMissingInitialTag(t *testing.T) {
-	tr := createTestRepo(t)
+	tr := createTestRepo(t, "")
 	repo, err := git.Open(tr)
 	checkFatal(t, err)
 	defer cleanupTestRepo(t, repo)
