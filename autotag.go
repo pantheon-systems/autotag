@@ -405,7 +405,7 @@ func (r *GitRepo) calcVersion() error {
 
 		v, nerr := r.parseCommit(commit)
 		if nerr != nil {
-			log.Fatal(err)
+			log.Fatal(nerr)
 		}
 
 		if v != nil {
