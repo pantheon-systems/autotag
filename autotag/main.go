@@ -21,6 +21,7 @@ type Options struct {
 	BuildMetadata       string `short:"m" long:"build-metadata" description:"optional SemVer build metadata to append to the version with '+' character"`
 	Scheme              string `short:"s" long:"scheme" description:"The commit message scheme to use (can be: autotag|conventional)" default:"autotag"`
 	NoVersionPrefix     bool   `short:"e" long:"empty-version-prefix" description:"Do not prepend v to version tag"`
+	Subdirectory        string `short:"d" long:"subdirectory" description:"Provide subdirectory to tag for"`
 }
 
 var opts Options
@@ -47,6 +48,7 @@ func main() {
 		BuildMetadata:             opts.BuildMetadata,
 		Scheme:                    opts.Scheme,
 		Prefix:                    !opts.NoVersionPrefix,
+		Subdirectory:              opts.Subdirectory,
 	})
 
 	if err != nil {

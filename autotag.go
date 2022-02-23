@@ -112,6 +112,9 @@ type GitRepoConfig struct {
 
 	// Prefix prepends literal 'v' to the tag, eg: v1.0.0. Enabled by default
 	Prefix bool
+
+	// Subdirectory provides the subdirectory to tag for
+	Subdirectory string
 }
 
 // GitRepo represents a repository we want to run actions against
@@ -130,7 +133,8 @@ type GitRepo struct {
 
 	scheme string
 
-	prefix bool
+	prefix       bool
+	subdirectory string
 }
 
 // NewRepo is a constructor for a repo object, parsing the tags that exist
@@ -190,6 +194,7 @@ func NewRepo(cfg GitRepoConfig) (*GitRepo, error) {
 		buildMetadata:             cfg.BuildMetadata,
 		scheme:                    cfg.Scheme,
 		prefix:                    cfg.Prefix,
+		subdirectory:              cfg.Subdirectory,
 	}
 
 	err = r.parseTags()
@@ -244,15 +249,20 @@ func (r *GitRepo) parseTags() error {
 		return fmt.Errorf("failed to fetch tags: %s", err.Error())
 	}
 
-	for tag, commit := range tags {
-		v, err := maybeVersionFromTag(commit)
+	for _, commit := range tags {
+		if r.subdirectory != "" && !strings.HasPrefix(commit, fmt.Sprintf("%s/", r.subdirectory)) {
+			log.Println("skipping non subdirectory tag: ", commit)
+			continue
+		}
+
+		v, err := r.maybeVersionFromTag(commit)
 		if err != nil {
-			log.Println("skipping non version tag: ", tag)
+			log.Println("skipping non version tag: ", commit)
 			continue
 		}
 
 		if v == nil {
-			log.Println("skipping non version tag: ", tag)
+			log.Println("skipping non version tag: ", commit)
 			continue
 		}
 
@@ -283,9 +293,14 @@ func (r *GitRepo) parseTags() error {
 	return fmt.Errorf("no stable (non pre-release) version tags found")
 }
 
-func maybeVersionFromTag(tag string) (*version.Version, error) {
+func (r *GitRepo) maybeVersionFromTag(tag string) (*version.Version, error) {
 	if tag == "" {
 		return nil, fmt.Errorf("empty tag not supported")
+	}
+
+	if r.subdirectory != "" {
+		subdirectoryTagParts := strings.Split(tag, "/")
+		tag = subdirectoryTagParts[len(subdirectoryTagParts)-1]
 	}
 
 	ver, vErr := parseVersion(tag)
@@ -314,7 +329,7 @@ func parseVersion(v string) (*version.Version, error) {
 // LatestVersion Reports the Latest version of the given repo
 // TODO:(jnelson) this could be more intelligent, looking for a nil new and reporting the latest version found if we refactor autobump at some point Mon Sep 14 13:05:49 2015
 func (r *GitRepo) LatestVersion() string {
-	return r.newVersion.String()
+	return r.getTagName()
 }
 
 func (r *GitRepo) retrieveBranchInfo() error {
@@ -442,13 +457,21 @@ func (r *GitRepo) AutoTag() error {
 	return r.tagNewVersion()
 }
 
-func (r *GitRepo) tagNewVersion() error {
+func (r *GitRepo) getTagName() string {
 	// TODO:(jnelson) These should be configurable? Mon Sep 14 12:02:52 2015
 	tagName := fmt.Sprintf("v%s", r.newVersion.String())
 	if !r.prefix {
 		tagName = r.newVersion.String()
 	}
 
+	if r.subdirectory != "" {
+		tagName = fmt.Sprintf("%s/%s", r.subdirectory, tagName)
+	}
+	return tagName
+}
+
+func (r *GitRepo) tagNewVersion() error {
+	tagName := r.getTagName()
 	log.Println("Writing Tag", tagName)
 	err := r.repo.CreateTag(tagName, r.branchID)
 	if err != nil {
