@@ -8,8 +8,8 @@ github.com/alecthomas/repr v0.0.0-20220113201626-b1b626ac65ae/go.mod h1:2kn6fqh/
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/gogs/git-module v1.1.5 h1:PIVEGKW3rPbzP6CWrlPk6qol/3WKpoEOWeRd2itrnvo=
-github.com/gogs/git-module v1.1.5/go.mod h1:oN37FFStFjdnTJXsSbhIHKJXh2YeDsEcXPATVz/oeuQ=
+github.com/gogs/git-module v1.4.0 h1:+0zcvzp3wxEMXVar2KnKmhI6JKlcAwjNUc6b5aTxs5M=
+github.com/gogs/git-module v1.4.0/go.mod h1:oN37FFStFjdnTJXsSbhIHKJXh2YeDsEcXPATVz/oeuQ=
 github.com/hashicorp/go-version v1.4.0 h1:aAQzgqIrRKRa7w75CKpbBxYsmUoPjzVm1W59ca1L0J4=
 github.com/hashicorp/go-version v1.4.0/go.mod h1:fltr4n8CU8Ke44wwGCBoEymUuxUHl09ZGVZPK5anwXA=
 github.com/jessevdk/go-flags v1.5.0 h1:1jKYvbxEjfUl0fmqTCOfonvskHHXMjBySTLW4y9LFvc=
