@@ -543,7 +543,7 @@ func (r *GitRepo) PatchBump() (*version.Version, error) {
 	return patchBumper.bump(r.currentVersion)
 }
 
-// findNamedMatches is a helper functiong for use with regexes containing named capture groups.
+// findNamedMatches is a helper function for use with regexes containing named capture groups.
 // It takes a regex and a string and returns a map with keys corresponding to the named captures
 // in the regex. If there are no matches the map will be empty.
 // https://play.golang.org/p/GR_6YHaEvef
