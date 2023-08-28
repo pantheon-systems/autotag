@@ -502,6 +502,20 @@ func TestAutoTag(t *testing.T) {
 			},
 			expectedTag: "2.0.0",
 		},
+		{
+			name: "autotag scheme, Bump with Major between minor changes",
+			setup: testRepoSetup{
+				scheme:        "autotag",
+				initialTag:    "1.0.0",
+				disablePrefix: true,
+				commitList: []string{
+					"[minor]: thing 1",
+					"[major]: drop support for Node 6",
+					"[minor]: thing 2"
+				},
+			},
+			expectedTag: "2.0.0",
+		},
 
 		// tests for conventional commits scheme. Based on:
 		// https://www.conventionalcommits.org/en/v1.0.0/#summary
