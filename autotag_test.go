@@ -511,7 +511,7 @@ func TestAutoTag(t *testing.T) {
 				commitList: []string{
 					"[minor]: thing 1",
 					"[major]: drop support for Node 6",
-					"[minor]: thing 2"
+					"[minor]: thing 2",
 				},
 			},
 			expectedTag: "2.0.0",
@@ -605,7 +605,7 @@ func TestAutoTag(t *testing.T) {
 				commitList: []string{
 					"feat: thing 1",
 					"feat!: break thing 1",
-					"feat: thing 2"
+					"feat: thing 2",
 				},
 				initialTag: "v1.0.0",
 			},
