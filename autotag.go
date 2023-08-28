@@ -408,7 +408,7 @@ func (r *GitRepo) calcVersion() error {
 			log.Fatal(nerr)
 		}
 
-		if v != nil && v > r.newVersion {
+		if v != nil && v.String() > r.newVersion.String() {
 			r.newVersion = v
 		}
 	}
