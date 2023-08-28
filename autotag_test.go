@@ -584,6 +584,19 @@ func TestAutoTag(t *testing.T) {
 			},
 			expectedTag: "v2.0.0",
 		},
+		{
+			name: "conventional commits, breaking change between minor commits",
+			setup: testRepoSetup{
+				scheme: "conventional",
+				commitList: []string{
+					"feat: thing 1",
+					"feat!: break thing 1",
+					"feat: thing 2"
+				},
+				initialTag: "v1.0.0",
+			},
+			expectedTag: "v2.0.0",
+		},
 	}
 
 	for _, tc := range tests {
