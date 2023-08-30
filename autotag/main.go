@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 
@@ -34,7 +34,7 @@ func init() {
 }
 
 func main() {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	if opts.Verbose {
 		log.SetOutput(os.Stderr)
 	}
@@ -48,7 +48,6 @@ func main() {
 		Scheme:                    opts.Scheme,
 		Prefix:                    !opts.NoVersionPrefix,
 	})
-
 	if err != nil {
 		log.SetOutput(os.Stderr)
 		log.Println("Error initializing: " + err.Error())

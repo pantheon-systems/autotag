@@ -7,12 +7,11 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
-
-	"regexp"
 
 	"github.com/gogs/git-module"
 	"github.com/hashicorp/go-version"
@@ -144,7 +143,6 @@ func NewRepo(cfg GitRepoConfig) (*GitRepo, error) {
 	}
 
 	gitDirPath, err := generateGitDirPath(cfg.RepoPath)
-
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +223,6 @@ func validateConfig(cfg GitRepoConfig) error {
 
 func generateGitDirPath(repoPath string) (string, error) {
 	absolutePath, err := filepath.Abs(repoPath)
-
 	if err != nil {
 		return "", err
 	}
@@ -480,9 +477,10 @@ func (r *GitRepo) parseCommit(commit *git.Commit) (*version.Version, error) {
 
 // parseAutotagCommit implements the autotag (default) commit scheme.
 // A git commit message header containing:
-//  - [major] or #major: major version bump
-//  - [minor] or #minor: minor version bump
-//  - [patch] or #patch: patch version bump
+//   - [major] or #major: major version bump
+//   - [minor] or #minor: minor version bump
+//   - [patch] or #patch: patch version bump
+//
 // If no action is present nil is returned and the caller must decide what action to take.
 func parseAutotagCommit(msg string) bumper {
 	if majorRex.MatchString(msg) {

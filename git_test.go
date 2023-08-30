@@ -2,7 +2,6 @@ package autotag
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -28,13 +27,10 @@ func checkFatal(t *testing.T, err error) {
 
 func createTestRepo(t *testing.T, branch string) string {
 	// figure out where we can create the test repo
-	path, err := ioutil.TempDir("", "autoTagTest")
-	checkFatal(t, err)
+	tmp := t.TempDir()
+	path := filepath.Join(tmp, "autoTagTest")
 
-	err = os.MkdirAll(path, 0777)
-	checkFatal(t, err)
-
-	err = exec.Command("git", "init", path).Run()
+	err := exec.Command("git", "init", path).Run()
 	if err != nil {
 		checkFatal(t, err)
 	}
@@ -49,7 +45,7 @@ func createTestRepo(t *testing.T, branch string) string {
 	}
 
 	tmpfile := "README"
-	err = ioutil.WriteFile(path+"/"+tmpfile, []byte("foo\n"), 0644)
+	err = os.WriteFile(path+"/"+tmpfile, []byte("foo\n"), 0o644)
 	checkFatal(t, err)
 
 	return path
@@ -107,7 +103,7 @@ func seedTestRepo(t *testing.T, tag string, repo *git.Repository) {
 
 func updateReadme(t *testing.T, repo *git.Repository, content string) {
 	tmpfile := repoRoot(repo) + "/README"
-	err := ioutil.WriteFile(tmpfile, []byte(content), 0644)
+	err := os.WriteFile(tmpfile, []byte(content), 0o644)
 	checkFatal(t, err)
 
 	makeCommit(repo, content)
