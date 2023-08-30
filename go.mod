@@ -1,6 +1,6 @@
 module github.com/pantheon-systems/autotag
 
-go 1.21.0
+go 1.20
 
 require (
 	github.com/alecthomas/assert v1.0.0
