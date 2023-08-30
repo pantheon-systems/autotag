@@ -502,6 +502,20 @@ func TestAutoTag(t *testing.T) {
 			},
 			expectedTag: "2.0.0",
 		},
+		{
+			name: "autotag scheme, Bump with Major between minor changes",
+			setup: testRepoSetup{
+				scheme:        "autotag",
+				initialTag:    "1.0.0",
+				disablePrefix: true,
+				commitList: []string{
+					"[minor]: thing 1",
+					"[major]: drop support for Node 6",
+					"[minor]: thing 2",
+				},
+			},
+			expectedTag: "2.0.0",
+		},
 
 		// tests for conventional commits scheme. Based on:
 		// https://www.conventionalcommits.org/en/v1.0.0/#summary
@@ -579,6 +593,19 @@ func TestAutoTag(t *testing.T) {
 					"feat!: break thing 1",
 					"feat: thing 2",
 					"refactor(runtime)!: drop support for Node 6",
+				},
+				initialTag: "v1.0.0",
+			},
+			expectedTag: "v2.0.0",
+		},
+		{
+			name: "conventional commits, breaking change between minor commits",
+			setup: testRepoSetup{
+				scheme: "conventional",
+				commitList: []string{
+					"feat: thing 1",
+					"feat!: break thing 1",
+					"feat: thing 2",
 				},
 				initialTag: "v1.0.0",
 			},
