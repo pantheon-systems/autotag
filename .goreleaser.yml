@@ -67,7 +67,7 @@ archives:
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
   # archive releases containing: binary, readme, and license. tarballs (macos, linux), zip (windows)
   - id: archives
-    name_template: {{ .ProjectName }}_{{ .Os }}_{{ if eq .Arch "386" }}i386{{ else }}{{ .Arch }}{{ end }}
+    name_template: '{{ .ProjectName }}_{{ .Os }}_{{ if eq .Arch "386" }}i386{{ else }}{{ .Arch }}{{ end }}'
     format_overrides:
       - goos: windows
         format: zip
