@@ -67,6 +67,9 @@ jobs:
           args: check
 
   release:
+    permissions:
+      # allow goreleaser to access the Releases API
+      contents: write
     # Checks if this is a merge into the master(main) and creates a new release if yes.
     if: github.event_name != 'pull_request'
     needs: [test, lint, goreleaser-check]
