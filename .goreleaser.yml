@@ -30,6 +30,31 @@ builds:
       - amd64
       - arm64
 
+  # duplicated builds for amd64 only. Needed by the legacy 'OSX' and 'Linux' binary release formats
+  - binary: autotag
+    id: macos-amd64-only
+    main: autotag/main.go
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{.Version}}+{{.ShortCommit}}
+    goos:
+      - darwin
+    goarch:
+      - amd64
+
+  - binary: autotag
+    id: linux-amd64-only
+    main: autotag/main.go
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{.Version}}+{{.ShortCommit}}
+    goos:
+      - linux
+    goarch:
+      - amd64
+
   # TODO: verify windows functionality then enable windows release binaries
   # - binary: autotag
   #   id: windows
@@ -59,20 +84,22 @@ changelog:
 archives:
   # Old release format for backwards compatibility with existing scripts:  Binary named 'Linux'
   - id: old-format-linux
-    builds: ["linux"]
+    builds: ["linux-amd64-only"]
     format: binary
     name_template: "Linux"
   # Old release format for backwards compatibility with existing scripts:  Binary named 'OSX'
   - id: old-format-osx
-    builds: ["macos"]
+    builds: ["macos-amd64-only"]
     format: binary
     name_template: "OSX"
   # New release format, binaries for all platforms in the form: `autotag_linux_amd64`
   - id: new-format-binary-only-all-platforms
     format: binary
+    builds: ["linux", "macos"]
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
   # archive releases containing: binary, readme, and license. tarballs (macos, linux), zip (windows)
   - id: archives
+    builds: ["linux", "macos"]
     name_template: '{{ .ProjectName }}_{{ .Os }}_{{ if eq .Arch "386" }}i386{{ else }}{{ .Arch }}{{ end }}'
     format_overrides:
       - goos: windows
