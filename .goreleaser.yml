@@ -7,6 +7,8 @@ builds:
   - binary: autotag
     id: macos
     main: autotag/main.go
+    flags:
+      - -trimpath
     ldflags:
       - -s -w -X main.version={{.Version}}+{{.ShortCommit}}
     goos:
@@ -18,6 +20,8 @@ builds:
   - binary: autotag
     id: linux
     main: autotag/main.go
+    flags:
+      - -trimpath
     ldflags:
       - -s -w -X main.version={{.Version}}+{{.ShortCommit}}
     goos:
