@@ -7,22 +7,28 @@ builds:
   - binary: autotag
     id: macos
     main: autotag/main.go
+    flags:
+      - -trimpath
     ldflags:
       - -s -w -X main.version={{.Version}}+{{.ShortCommit}}
     goos:
       - darwin
     goarch:
       - amd64
+      - arm64
 
   - binary: autotag
     id: linux
     main: autotag/main.go
+    flags:
+      - -trimpath
     ldflags:
       - -s -w -X main.version={{.Version}}+{{.ShortCommit}}
     goos:
       - linux
     goarch:
       - amd64
+      - arm64
 
   # TODO: verify windows functionality then enable windows release binaries
   # - binary: autotag
