@@ -516,6 +516,18 @@ func TestAutoTag(t *testing.T) {
 			},
 			expectedTag: "2.0.0",
 		},
+		{
+			name: "autotag scheme, version comparison is not lexicographic",
+			setup: testRepoSetup{
+				scheme:     "autotag",
+				initialTag: "v0.9.0",
+				commitList: []string{
+					"[minor]: thing 1",
+					"[minor]: thing 2",
+				},
+			},
+			expectedTag: "v0.10.0",
+		},
 
 		// tests for conventional commits scheme. Based on:
 		// https://www.conventionalcommits.org/en/v1.0.0/#summary
@@ -610,6 +622,18 @@ func TestAutoTag(t *testing.T) {
 				initialTag: "v1.0.0",
 			},
 			expectedTag: "v2.0.0",
+		},
+		{
+			name: "conventional commits, version comparison is not lexicographic",
+			setup: testRepoSetup{
+				scheme: "conventional",
+				commitList: []string{
+					"feat: thing 1",
+					"feat: thing 2",
+				},
+				initialTag: "v0.9.0",
+			},
+			expectedTag: "v0.10.0",
 		},
 	}
 
