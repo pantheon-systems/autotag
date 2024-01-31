@@ -405,13 +405,13 @@ func (r *GitRepo) calcVersion() error {
 			log.Fatal(nerr)
 		}
 
-		if v != nil && v.String() > r.newVersion.String() {
+		if v != nil && v.GreaterThan(r.newVersion) {
 			r.newVersion = v
 		}
 	}
 
 	// if there is no movement on the version from commits, bump patch
-	if r.newVersion == r.currentVersion {
+	if r.newVersion.Equal(r.currentVersion) {
 		if r.newVersion, err = patchBumper.bump(r.currentVersion); err != nil {
 			return err
 		}
