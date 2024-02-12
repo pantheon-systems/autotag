@@ -434,7 +434,7 @@ func (r *GitRepo) calcVersion() error {
 	return nil
 }
 
-// AutoTag applies the new version tag thats calculated
+// AutoTag applies the new version tag that's calculated
 func (r *GitRepo) AutoTag() error {
 	return r.tagNewVersion()
 }
