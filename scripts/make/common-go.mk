@@ -2,7 +2,6 @@
 #
 # INPUT VARIABLES
 # - GOTEST_ARGS: Override the options passed by default ot go test (--race by default)
-# - COVERALLS_TOKEN: Token to use when pushing coverage to coveralls.
 #
 # - FETCH_CA_CERT: The presence of this variable will cause the root CA certs
 #                  to be downloaded to the file ca-certificates.crt before building.
@@ -120,10 +119,6 @@ ifeq (, $(shell which gotestcover))
 	$(call INFO, "installing gotestcover")
 	@GO111MODULE=off go get github.com/pierrre/gotestcover
 endif
-ifeq (, $(shell which goveralls))
-	$(call INFO, "installing goveralls")
-	@GO111MODULE=off go get github.com/mattn/goveralls > /dev/null
-endif
 
 deps-status:: ## check status of deps with gostatus
 ifeq (, $(shell which gostatus))
@@ -135,14 +130,6 @@ endif
 test-coverage-go:: deps-coverage ## run coverage report
 	$(call INFO, "running gotestcover")
 	@gotestcover -v -coverprofile=coverage.out $$(go list ./... | grep -v /vendor/) > /dev/null
-
-test-coveralls:: test-coverage-go ## run coverage and report to coveralls
-ifdef COVERALLS_TOKEN
-	$(call INFO, "reporting coverage to coveralls")
-	@goveralls -repotoken $$COVERALLS_TOKEN -service=circleci -coverprofile=coverage.out > /dev/null
-else
-	$(call WARN, "You asked to use Coveralls but neglected to set the COVERALLS_TOKEN environment variable")
-endif
 
 test-coverage-html:: test-coverage ## output html coverage file
 	$(call INFO, "generating html coverage report")
@@ -176,4 +163,4 @@ ifdef FETCH_CA_CERT
 	@curl -s -L https://curl.haxx.se/ca/cacert.pem -o ca-certificates.crt > /dev/null
 endif
 
-.PHONY:: _fetch-cert _gvt-install test-coverage-html test-coveralls deps-status deps-coverage deps-circle deps-go test-circle test-go build-circle build-linux build-go _go-install-dep-tools
+.PHONY:: _fetch-cert _gvt-install test-coverage-html deps-status deps-coverage deps-circle deps-go test-circle test-go build-circle build-linux build-go _go-install-dep-tools

@@ -27,11 +27,6 @@ jobs:
         run: |
           echo "$HOME/go/bin" >> $GITHUB_PATH
 
-      - name: Install Coverage Tools
-        # TODO(vtopc): replace with Coveralls GitHub Action as this step is running for 20-30 seconds.
-        run: |
-          make deps-coverage
-
       - name: Download Dependencies
         run: |
           go mod download
@@ -41,7 +36,7 @@ jobs:
           git config --global user.email ci
           git config --global user.name ci
 
-      - name: Run Unit Tests and Upload Coverage Report
+      - name: Run Unit Tests
         run: |
           make test-gha
 
