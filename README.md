@@ -2,7 +2,6 @@ AutoTag
 =======
 
 [![CI](https://github.com/pantheon-systems/autotag/actions/workflows/workflow.yml/badge.svg)](https://github.com/pantheon-systems/autotag/actions/workflows/workflow.yml)
-[![Coverage Status](https://coveralls.io/repos/github/pantheon-systems/autotag/badge.svg?branch=master)](https://coveralls.io/github/pantheon-systems/autotag?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/pantheon-systems/autotag)](https://goreportcard.com/report/github.com/pantheon-systems/autotag)
 [![Actively Maintained](https://img.shields.io/badge/Pantheon-Actively_Maintained-yellow?logo=pantheon&color=FFDC28)](https://pantheon.io/docs/oss-support-levels#actively-maintained-support)
 
