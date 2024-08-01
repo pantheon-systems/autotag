@@ -1,0 +1,11 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: autotag
+  description: Git repository version tagging tool
+  annotations:
+    backstage.io/techdocs-ref: dir:docs/
+spec:
+  owner: releng
+  type: tool
