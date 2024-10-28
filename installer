@@ -70,8 +70,7 @@ execute() {
 }
 get_binaries() {
   case "$PLATFORM" in
-    darwin/amd64) BINARIES="autotag" ;;
-    linux/amd64) BINARIES="autotag" ;;
+    darwin/amd64 | linux/amd64 | darwin/arm64 | linux/arm64) BINARIES="autotag" ;;
     *)
       log_crit "platform $PLATFORM is not supported.  Make sure this script is up-to-date and file request at https://github.com/${PREFIX}/issues/new"
       exit 1
